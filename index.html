@@ -1,15 +1,14 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Office Tea Tracker</title>
+    <title>Tea Tracker</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        body { background-color: #f0f2f5; padding-bottom: 100px; }
+        body { background-color: #f0f2f5; padding-bottom: 100px; font-family: sans-serif; }
         .card { border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 15px; }
         .header-bg { background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%); color: white; padding: 25px; border-radius: 0 0 20px 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .nav-bottom { position: fixed; bottom: 0; width: 100%; background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 1000; display: flex; justify-content: space-around; padding: 10px 0; }
@@ -17,7 +16,6 @@
         .nav-item.active { color: #4e4376; font-weight: bold; }
         .nav-item i { font-size: 1.4rem; display: block; margin-bottom: 2px; }
         
-        /* Powered By Footer Styles */
         .powered-by {
             position: fixed;
             bottom: 60px;
@@ -29,19 +27,14 @@
             font-size: 0.75rem;
             z-index: 999;
         }
-        .powered-by strong {
-            color: #ffd700;
-            margin: 0 5px;
-        }
-        .heart-icon {
-            color: #ff4757;
-            animation: heartbeat 1.5s infinite;
-            margin-left: 5px;
-        }
-        @keyframes heartbeat {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-        }
+        .powered-by strong { color: #ffd700; margin: 0 5px; }
+        .heart-icon { color: #ff4757; animation: heartbeat 1.5s infinite; margin-left: 5px; }
+        @keyframes heartbeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+
+        /* Table Styling for Screen */
+        .bill-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
+        .bill-table th, .bill-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .bill-table th { background-color: #f8f9fa; font-weight: bold; }
         
         @media print {
             .nav-bottom, .no-print, .header-bg, .powered-by { display: none !important; }
@@ -54,7 +47,7 @@
 
 <!-- Header -->
 <div class="header-bg text-center">
-    <h3><i class="fas fa-mug-hot"></i> Tea Manager</h3>
+    <h3><i class="fas fa-mug-hot"></i> <span id="appTitle">Tea Tracker</span></h3>
     <p id="displayManagerName" style="font-size: 0.9rem; opacity: 0.9;">Manager: Loading...</p>
 </div>
 
@@ -79,7 +72,6 @@
                         <input type="number" class="form-control" id="entryCups" min="1" required>
                     </div>
                     <div class="col-6 mb-3">
-                        <!-- Updated Label -->
                         <label class="form-label text-muted small">Total Cost (Rs.)</label>
                         <input type="number" class="form-control" id="entryCost" step="0.01" required>
                     </div>
@@ -87,7 +79,6 @@
                 <button type="submit" class="btn btn-primary w-100 py-2 rounded-pill">Save Entry</button>
             </form>
         </div>
-        
         <div class="card p-3 bg-white">
             <div class="d-flex justify-content-between">
                 <span>Today's Total:</span>
@@ -102,13 +93,7 @@
             <h5 class="mb-3">History</h5>
             <div class="table-responsive">
                 <table class="table table-sm">
-                    <thead>
-                        <tr>
-                            <th>Date/Time</th>
-                            <th>Seller</th>
-                            <th>Cost</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>Date/Time</th><th>Seller</th><th>Cost</th></tr></thead>
                     <tbody id="recordsTableBody"></tbody>
                 </table>
             </div>
@@ -133,13 +118,14 @@
             <button class="btn btn-success w-100 mb-3" onclick="generateReport()">View Details</button>
         </div>
 
-        <div id="printableArea" class="card p-4 mt-3 d-none">
-            <h3 class="text-center">Tea Expense Report</h3>
-            <p class="text-center text-muted" id="printManagerName"></p>
-            <p class="text-center" id="printDateRange"></p>
+        <!-- Preview Area (Screen Only) -->
+        <div id="previewArea" class="card p-4 mt-3 d-none">
+            <h3 class="text-center" id="previewTitle">Tea Expense Report</h3>
+            <p class="text-center text-muted" id="previewManager"></p>
+            <p class="text-center" id="previewDateRange"></p>
             
-            <table class="table table-bordered mt-3">
-                <thead class="table-light">
+            <table class="bill-table">
+                <thead>
                     <tr>
                         <th>Date & Time</th>
                         <th>Seller</th>
@@ -147,11 +133,11 @@
                         <th>Cost</th>
                     </tr>
                 </thead>
-                <tbody id="printTableBody"></tbody>
+                <tbody id="previewTableBody"></tbody>
                 <tfoot>
                     <tr>
                         <th colspan="3" class="text-end">Total:</th>
-                        <th id="printTotal">Rs. 0.00</th>
+                        <th id="previewTotal">Rs. 0.00</th>
                     </tr>
                 </tfoot>
             </table>
@@ -160,13 +146,17 @@
                 <div class="text-center"><br>___________<br>Seller</div>
             </div>
         </div>
-        <button id="printBtn" class="btn btn-dark w-100 mt-3 d-none" onclick="printPDF()"><i class="fas fa-file-pdf"></i> Download PDF</button>
+        <button id="downloadBtn" class="btn btn-dark w-100 mt-3 d-none" onclick="generatePDFDirect()"><i class="fas fa-file-pdf"></i> Download PDF</button>
     </div>
 
     <!-- VIEW 4: SETTINGS -->
     <div id="view-settings" class="view-section d-none">
         <div class="card p-4">
             <h5>Settings</h5>
+            <div class="mb-3">
+                <label>Office/Company Name</label>
+                <input type="text" class="form-control" id="officeNameInput" placeholder="e.g., ABC Company">
+            </div>
             <div class="mb-3">
                 <label>Manager Name</label>
                 <input type="text" class="form-control" id="managerNameInput">
@@ -186,18 +176,10 @@
 
 <!-- Bottom Navigation -->
 <div class="nav-bottom no-print">
-    <div class="nav-item active" onclick="switchView('add', this)">
-        <i class="fas fa-plus-circle"></i> Add
-    </div>
-    <div class="nav-item" onclick="switchView('history', this)">
-        <i class="fas fa-list"></i> History
-    </div>
-    <div class="nav-item" onclick="switchView('report', this)">
-        <i class="fas fa-file-invoice"></i> Bill
-    </div>
-    <div class="nav-item" onclick="switchView('settings', this)">
-        <i class="fas fa-cog"></i> Settings
-    </div>
+    <div class="nav-item active" onclick="switchView('add', this)"><i class="fas fa-plus-circle"></i> Add</div>
+    <div class="nav-item" onclick="switchView('history', this)"><i class="fas fa-list"></i> History</div>
+    <div class="nav-item" onclick="switchView('report', this)"><i class="fas fa-file-invoice"></i> Bill</div>
+    <div class="nav-item" onclick="switchView('settings', this)"><i class="fas fa-cog"></i> Settings</div>
 </div>
 
 <!-- Powered By Footer -->
@@ -207,36 +189,45 @@
 
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<!-- We only need jsPDF now, not html2pdf -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
 <script>
     let appData = {
+        officeName: "Tea Tracker",
         manager: "Office Manager",
         sellers: ["Canteen", "Street Vendor"],
         records: []
     };
+
+    // Global variable to store current report data for PDF generation
+    let currentReportData = [];
+    let currentReportTotal = 0;
+    let currentReportRange = "";
 
     window.onload = function() {
         loadData();
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         document.getElementById('entryDate').value = now.toISOString().slice(0,16);
-        
         const todayStr = new Date().toISOString().split('T')[0];
         document.getElementById('reportDate').value = todayStr;
         document.getElementById('reportStart').value = todayStr;
         document.getElementById('reportEnd').value = todayStr;
-        
         updateStats();
     };
 
     function loadData() {
-        const stored = localStorage.getItem('teaAppData_v2');
+        const stored = localStorage.getItem('teaAppData_v6');
         if (stored) appData = JSON.parse(stored);
         
+        document.getElementById('appTitle').innerText = appData.officeName;
         document.getElementById('displayManagerName').innerText = "Manager: " + appData.manager;
+        document.getElementById('officeNameInput').value = appData.officeName;
         document.getElementById('managerNameInput').value = appData.manager;
-        document.getElementById('printManagerName').innerText = appData.manager;
+        document.getElementById('previewManager').innerText = appData.manager;
+        document.getElementById('previewTitle').innerText = appData.officeName + " - Tea Expense Report";
         
         renderDropdowns();
         renderSettingsList();
@@ -244,17 +235,15 @@
     }
 
     function saveData() {
-        localStorage.setItem('teaAppData_v2', JSON.stringify(appData));
+        localStorage.setItem('teaAppData_v6', JSON.stringify(appData));
         updateStats();
     }
 
     function switchView(viewName, navElement) {
         document.querySelectorAll('.view-section').forEach(el => el.classList.add('d-none'));
         document.getElementById('view-' + viewName).classList.remove('d-none');
-        
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
         if(navElement) navElement.classList.add('active');
-
         if(viewName === 'history') loadHistory();
     }
 
@@ -269,7 +258,6 @@
         };
         appData.records.push(newRecord);
         appData.records.sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
-        
         saveData();
         alert("Saved!");
         this.reset();
@@ -281,10 +269,7 @@
     function updateStats() {
         const today = new Date().toISOString().split('T')[0];
         let total = 0;
-        appData.records.forEach(r => {
-            if (r.datetime.startsWith(today)) total += r.cost;
-        });
-        // Updated Currency Symbol
+        appData.records.forEach(r => { if (r.datetime.startsWith(today)) total += r.cost; });
         document.getElementById('todaySpending').innerText = "Rs. " + total.toFixed(2);
     }
 
@@ -294,14 +279,8 @@
         appData.records.forEach(r => {
             const dt = new Date(r.datetime);
             const dateStr = dt.toLocaleDateString() + ' ' + dt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            
             const tr = document.createElement('tr');
-            // Updated Currency Symbol in Table
-            tr.innerHTML = `
-                <td><small>${dateStr}</small></td>
-                <td>${r.seller}</td>
-                <td class="text-end">Rs. ${r.cost.toFixed(2)}</td>
-            `;
+            tr.innerHTML = `<td><small>${dateStr}</small></td><td>${r.seller}</td><td class="text-end">Rs. ${r.cost.toFixed(2)}</td>`;
             tbody.appendChild(tr);
         });
     }
@@ -334,9 +313,13 @@
     function removeSeller(i) { appData.sellers.splice(i, 1); renderSettingsList(); renderDropdowns(); }
     
     function saveSettings() {
+        appData.officeName = document.getElementById('officeNameInput').value || "Tea Tracker";
         appData.manager = document.getElementById('managerNameInput').value;
         saveData();
+        document.getElementById('appTitle').innerText = appData.officeName;
         document.getElementById('displayManagerName').innerText = "Manager: " + appData.manager;
+        document.getElementById('previewTitle').innerText = appData.officeName + " - Tea Expense Report";
+        document.getElementById('previewManager').innerText = appData.manager;
         alert("Settings Saved");
         switchView('add', document.querySelector('.nav-item'));
     }
@@ -354,19 +337,28 @@
 
         filtered.sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
 
-        const tbody = document.getElementById('printTableBody');
+        // Store data globally for PDF generation
+        currentReportData = filtered;
+        currentReportTotal = 0;
+        const tbody = document.getElementById('previewTableBody');
         tbody.innerHTML = '';
-        let total = 0;
+
+        if (filtered.length === 0) {
+            alert("No records found for this date range.");
+            document.getElementById('previewArea').classList.add('d-none');
+            document.getElementById('downloadBtn').classList.add('d-none');
+            return;
+        }
 
         filtered.forEach(r => {
-            total += r.cost;
+            currentReportTotal += r.cost;
             const dt = new Date(r.datetime);
-            const timeStr = dt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const datePart = r.datetime.split('T')[0];
+            const timePart = dt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             
             const tr = document.createElement('tr');
-            // Updated Currency Symbol in PDF
             tr.innerHTML = `
-                <td>${r.datetime.split('T')[0]} <br><small class="text-muted">${timeStr}</small></td>
+                <td>${datePart}<br><small style="color:#666">${timePart}</small></td>
                 <td>${r.seller}</td>
                 <td>${r.cups}</td>
                 <td>Rs. ${r.cost.toFixed(2)}</td>
@@ -374,19 +366,94 @@
             tbody.appendChild(tr);
         });
 
-        document.getElementById('printDateRange').innerText = singleDate ? `Date: ${singleDate}` : `From: ${start} To: ${end}`;
-        // Updated Currency Symbol in Total
-        document.getElementById('printTotal').innerText = "Rs. " + total.toFixed(2);
+        currentReportRange = singleDate ? `Date: ${singleDate}` : `From: ${start} To: ${end}`;
+        document.getElementById('previewDateRange').innerText = currentReportRange;
+        document.getElementById('previewTotal').innerText = "Rs. " + currentReportTotal.toFixed(2);
         
-        document.getElementById('printableArea').classList.remove('d-none');
-        document.getElementById('printBtn').classList.remove('d-none');
+        document.getElementById('previewArea').classList.remove('d-none');
+        document.getElementById('downloadBtn').classList.remove('d-none');
+        document.getElementById('previewArea').scrollIntoView({ behavior: 'smooth' });
     }
 
-    function printPDF() {
-        const element = document.getElementById('printableArea');
-        html2pdf().from(element).save('Tea_Bill.pdf');
+    // NEW DIRECT PDF GENERATION FUNCTION
+    function generatePDFDirect() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        const officeName = appData.officeName;
+        const managerName = appData.manager;
+        const fileName = `${officeName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_tea_bill_${new Date().toISOString().split('T')[0]}.pdf`;
+
+        // 1. Title
+        doc.setFontSize(18);
+        doc.setTextColor(40);
+        doc.text(`${officeName} - Tea Expense Report`, 105, 20, null, null, "center");
+
+        // 2. Manager Name
+        doc.setFontSize(12);
+        doc.setTextColor(100);
+        doc.text(`Manager: ${managerName}`, 105, 30, null, null, "center");
+
+        // 3. Date Range
+        doc.text(currentReportRange, 105, 38, null, null, "center");
+
+        // 4. Prepare Table Data
+        const tableColumn = ["Date & Time", "Seller", "Cups", "Cost"];
+        const tableRows = [];
+
+        currentReportData.forEach(r => {
+            const dt = new Date(r.datetime);
+            const datePart = r.datetime.split('T')[0];
+            const timePart = dt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            const rowData = [
+                `${datePart}\n${timePart}`, // Multiline cell
+                r.seller,
+                r.cups.toString(),
+                `Rs. ${r.cost.toFixed(2)}`
+            ];
+            tableRows.push(rowData);
+        });
+
+        // 5. Generate Table using autoTable plugin
+        doc.autoTable({
+            head: [tableColumn],
+            body: tableRows,
+            startY: 45,
+            theme: 'grid',
+            headStyles: { fillColor: [44, 62, 80] }, // Dark blue header
+            footStyles: { fillColor: [44, 62, 80] },
+            didParseCell: function(data) {
+                // Ensure text is black
+                if (data.section === 'body') {
+                    data.cell.styles.textColor = [0, 0, 0];
+                }
+            },
+            footer: function(data) {
+                if (data.pageNumber === data.pageCount) {
+                    doc.setFontSize(12);
+                    doc.setFont(undefined, 'bold');
+                    doc.text(`Total: Rs. ${currentReportTotal.toFixed(2)}`, 190, data.cursor.y + 10, null, null, "right");
+                }
+            }
+        });
+
+        // 6. Add Signatures
+        const finalY = doc.lastAutoTable.finalY + 20;
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(0, 0, 0);
+        
+        doc.line(20, finalY, 60, finalY);
+        doc.text("Manager", 20, finalY + 5);
+
+        doc.line(150, finalY, 190, finalY);
+        doc.text("Seller", 150, finalY + 5);
+
+        // 7. Save
+        doc.save(fileName);
+        alert('✅ PDF Generated Successfully! Check your Downloads.');
     }
 </script>
 </body>
 </html>
-```
