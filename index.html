@@ -6,90 +6,54 @@
     <title>Tea Tracker</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
     <style>
         body { background-color: #f0f2f5; padding-bottom: 100px; font-family: sans-serif; }
         .card { border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 15px; }
-        .header-bg { background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%); color: white; padding: 25px; border-radius: 0 0 20px 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .header-bg { background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%); color: white; padding: 25px; border-radius: 0 0 20px 20px; margin-bottom: 20px; }
         .nav-bottom { position: fixed; bottom: 0; width: 100%; background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 1000; display: flex; justify-content: space-around; padding: 10px 0; }
         .nav-item { text-align: center; color: #666; font-size: 0.8rem; cursor: pointer; }
         .nav-item.active { color: #4e4376; font-weight: bold; }
         .nav-item i { font-size: 1.4rem; display: block; margin-bottom: 2px; }
-        
-        .powered-by {
-            position: fixed;
-            bottom: 60px;
-            width: 100%;
-            text-align: center;
-            background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
-            color: white;
-            padding: 8px 0;
-            font-size: 0.75rem;
-            z-index: 999;
-        }
-        .powered-by strong { color: #ffd700; margin: 0 5px; }
-        .heart-icon { color: #ff4757; animation: heartbeat 1.5s infinite; margin-left: 5px; }
+        .powered-by { position: fixed; bottom: 60px; width: 100%; text-align: center; background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%); color: white; padding: 8px 0; font-size: 0.75rem; z-index: 999; }
+        .powered-by strong { color: #ffd700; }
+        .heart-icon { color: #ff4757; animation: heartbeat 1.5s infinite; }
         @keyframes heartbeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
-
         .bill-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
         .bill-table th, .bill-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        .bill-table th { background-color: #f8f9fa; font-weight: bold; }
+        .bill-table th { background-color: #f8f9fa; }
+        .danger-zone { border: 1px solid #dc3545; background: #fff5f5; padding: 15px; border-radius: 10px; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-<!-- Header -->
 <div class="header-bg text-center">
     <h3><i class="fas fa-mug-hot"></i> <span id="appTitle">Tea Tracker</span></h3>
     <p id="displayManagerName" style="font-size: 0.9rem; opacity: 0.9;">Manager: Loading...</p>
 </div>
 
 <div class="container">
-
-    <!-- VIEW 1: ADD ENTRY -->
+    <!-- VIEW 1: ADD -->
     <div id="view-add" class="view-section">
         <div class="card p-4">
-            <h5 class="mb-3">New Purchase</h5>
+            <h5>New Purchase</h5>
             <form id="teaForm">
-                <div class="mb-3">
-                    <label class="form-label text-muted small">Date & Time</label>
-                    <input type="datetime-local" class="form-control" id="entryDate" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label text-muted small">Tea Seller</label>
-                    <select class="form-select" id="entrySeller" required></select>
-                </div>
+                <div class="mb-3"><label class="small">Date & Time</label><input type="datetime-local" class="form-control" id="entryDate" required></div>
+                <div class="mb-3"><label class="small">Tea Seller</label><select class="form-select" id="entrySeller" required></select></div>
                 <div class="row">
-                    <div class="col-6 mb-3">
-                        <label class="form-label text-muted small">Cups</label>
-                        <input type="number" class="form-control" id="entryCups" min="1" required>
-                    </div>
-                    <div class="col-6 mb-3">
-                        <label class="form-label text-muted small">Total Cost (Rs.)</label>
-                        <input type="number" class="form-control" id="entryCost" step="0.01" required>
-                    </div>
+                    <div class="col-6 mb-3"><label class="small">Cups</label><input type="number" class="form-control" id="entryCups" min="1" required></div>
+                    <div class="col-6 mb-3"><label class="small">Cost (Rs.)</label><input type="number" class="form-control" id="entryCost" step="0.01" required></div>
                 </div>
-                <button type="submit" class="btn btn-primary w-100 py-2 rounded-pill">Save Entry</button>
+                <button type="submit" class="btn btn-primary w-100">Save Entry</button>
             </form>
         </div>
-        <div class="card p-3 bg-white">
-            <div class="d-flex justify-content-between">
-                <span>Today's Total:</span>
-                <strong id="todaySpending" class="text-success">Rs. 0.00</strong>
-            </div>
-        </div>
+        <div class="card p-3"><div class="d-flex justify-content-between"><span>Today:</span><strong id="todaySpending" class="text-success">Rs. 0.00</strong></div></div>
     </div>
 
     <!-- VIEW 2: HISTORY -->
     <div id="view-history" class="view-section d-none">
         <div class="card p-3">
-            <h5 class="mb-3">History</h5>
-            <div class="table-responsive">
-                <table class="table table-sm">
-                    <thead><tr><th>Date/Time</th><th>Seller</th><th>Cost</th></tr></thead>
-                    <tbody id="recordsTableBody"></tbody>
-                </table>
-            </div>
+            <h5>History</h5>
+            <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Date</th><th>Seller</th><th>Cost</th></tr></thead><tbody id="recordsTableBody"></tbody></table></div>
         </div>
     </div>
 
@@ -97,501 +61,297 @@
     <div id="view-report" class="view-section d-none">
         <div class="card p-4">
             <h5>Generate Bill</h5>
-            <div class="mb-3">
-                <label class="form-label small">Select Date</label>
-                <input type="date" class="form-control" id="reportDate">
-            </div>
-            <div class="mb-3">
-                <label class="form-label small">Or Date Range</label>
-                <div class="row">
-                    <div class="col"><input type="date" class="form-control" id="reportStart"></div>
-                    <div class="col"><input type="date" class="form-control" id="reportEnd"></div>
-                </div>
-            </div>
-            <button class="btn btn-success w-100 mb-3" onclick="generateReport()">View Details</button>
-        </div>
-
-        <div id="previewArea" class="card p-4 mt-3 d-none">
-            <h3 class="text-center" id="previewTitle">Tea Expense Report</h3>
-            <p class="text-center text-muted" id="previewManager"></p>
-            <p class="text-center" id="previewDateRange"></p>
+            <div class="mb-3"><label class="small">Date Range</label><div class="row"><div class="col"><input type="date" class="form-control" id="reportStart"></div><div class="col"><input type="date" class="form-control" id="reportEnd"></div></div></div>
+            <button class="btn btn-success w-100 mb-3" onclick="generateReport()">1. View Details</button>
             
-            <table class="bill-table">
-                <thead>
-                    <tr>
-                        <th>Date & Time</th>
-                        <th>Seller</th>
-                        <th>Cups</th>
-                        <th>Cost</th>
-                    </tr>
-                </thead>
-                <tbody id="previewTableBody"></tbody>
-                <tfoot>
-                    <tr>
-                        <th colspan="3" class="text-end">Total:</th>
-                        <th id="previewTotal">Rs. 0.00</th>
-                    </tr>
-                </tfoot>
-            </table>
-            <div class="mt-4 d-flex justify-content-between">
-                <div class="text-center"><br>___________<br>Manager</div>
-                <div class="text-center"><br>___________<br>Seller</div>
+            <div id="previewArea" class="d-none mt-3">
+                <h4 class="text-center" id="previewTitle">Report</h4>
+                <p class="text-center text-muted" id="previewManager"></p>
+                <p class="text-center" id="previewDateRange"></p>
+                <table class="bill-table">
+                    <thead><tr><th>Date & Time</th><th>Seller</th><th>Cups</th><th>Cost</th></tr></thead>
+                    <tbody id="previewTableBody"></tbody>
+                    <tfoot><tr><th colspan="3" class="text-end">Total:</th><th id="previewTotal">Rs. 0.00</th></tr></tfoot>
+                </table>
+                <div class="mt-4 d-flex justify-content-between"><div class="text-center"><br>________<br>Mgr</div><div class="text-center"><br>________<br>Seller</div></div>
+                
+                <!-- FIXED BUTTON -->
+                <button id="downloadBtn" class="btn btn-dark w-100 mt-3" onclick="debugAndGeneratePDF()">
+                    <i class="fas fa-file-pdf"></i> 2. Download PDF
+                </button>
+                <p class="text-center small text-muted mt-2">Check logs if failed.</p>
             </div>
         </div>
-        
-        <!-- DOWNLOAD BUTTON -->
-        <button id="downloadBtn" class="btn btn-dark w-100 mt-3 d-none" onclick="forcePDFDownload()">
-            <i class="fas fa-file-pdf"></i> Download PDF
-        </button>
-        <p class="text-center text-muted small mt-2">
-            <i class="fas fa-info-circle"></i> If download doesn't start, check your notification bar or "Files" app.
-        </p>
     </div>
 
     <!-- VIEW 4: SETTINGS -->
     <div id="view-settings" class="view-section d-none">
         <div class="card p-4">
             <h5>Settings</h5>
-            <div class="mb-3">
-                <label>Office/Company Name</label>
-                <input type="text" class="form-control" id="officeNameInput" placeholder="e.g., ABC Company">
-            </div>
-            <div class="mb-3">
-                <label>Manager Name</label>
-                <input type="text" class="form-control" id="managerNameInput">
-            </div>
-            <hr>
-            <h6>Add Seller</h6>
-            <div class="input-group mb-3">
-                <input type="text" class="form-control" id="newSellerName">
-                <button class="btn btn-outline-primary" onclick="addSeller()">Add</button>
-            </div>
+            <div class="mb-3"><label>Office Name</label><input type="text" class="form-control" id="officeNameInput"></div>
+            <div class="mb-3"><label>Manager</label><input type="text" class="form-control" id="managerNameInput"></div>
+            <hr><h6>Sellers</h6>
+            <div class="input-group mb-2"><input type="text" class="form-control" id="newSellerName"><button class="btn btn-outline-primary" onclick="addSeller()">Add</button></div>
             <ul class="list-group mb-3" id="sellersList"></ul>
-            <button class="btn btn-primary w-100" onclick="saveSettings()">Save Changes</button>
-        </div>
-
-        <!-- CLEAR DATA CARD -->
-        <div class="card p-4 mt-0" style="border: 1.5px solid #dc3545 !important;">
-            <h6 class="text-danger"><i class="fas fa-trash-alt me-1"></i> Clear Records</h6>
-            <p class="text-muted small mb-3">Use this after a bill is paid to remove settled records. This cannot be undone.</p>
-
-            <label class="form-label small fw-bold">Clear Specific Paid Period</label>
-            <div class="row g-2 mb-2">
-                <div class="col-6">
-                    <label class="form-label text-muted" style="font-size:0.75rem;">From</label>
-                    <input type="date" class="form-control form-control-sm" id="clearStart">
+            <button class="btn btn-primary w-100" onclick="saveSettings()">Save Settings</button>
+            
+            <div class="danger-zone">
+                <h6 class="text-danger">Clear Data</h6>
+                <div class="row g-2 mb-2">
+                    <div class="col-6"><input type="date" class="form-control form-control-sm" id="clearStart"></div>
+                    <div class="col-6"><input type="date" class="form-control form-control-sm" id="clearEnd"></div>
                 </div>
-                <div class="col-6">
-                    <label class="form-label text-muted" style="font-size:0.75rem;">To</label>
-                    <input type="date" class="form-control form-control-sm" id="clearEnd">
-                </div>
-            </div>
-            <button class="btn btn-outline-danger w-100 mb-3" onclick="confirmClearRange()">
-                <i class="fas fa-calendar-times me-1"></i> Clear Selected Period
-            </button>
-
-            <hr class="my-2">
-
-            <button class="btn btn-danger w-100" onclick="confirmClearAll()">
-                <i class="fas fa-exclamation-triangle me-1"></i> Clear ALL Records
-            </button>
-        </div>
-    </div>
-
-    <!-- CONFIRM MODAL -->
-    <div class="modal fade" id="confirmModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title text-danger"><i class="fas fa-trash-alt me-2"></i>Confirm Delete</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p id="confirmModalMsg" class="mb-1"></p>
-                    <p class="text-danger small fw-bold mb-0"><i class="fas fa-exclamation-circle me-1"></i>This action cannot be undone.</p>
-                </div>
-                <div class="modal-footer border-0 pt-0">
-                    <button class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                    <button class="btn btn-danger rounded-pill px-4" id="confirmModalBtn">Yes, Delete</button>
-                </div>
+                <button class="btn btn-warning w-100 btn-sm" onclick="clearPeriod()">Clear Selected Period</button>
+                <hr>
+                <button class="btn btn-danger w-100" onclick="resetAll()">RESET ALL DATA</button>
             </div>
         </div>
     </div>
-
 </div>
 
-<!-- Bottom Navigation -->
 <div class="nav-bottom no-print">
-    <div class="nav-item active" onclick="switchView('add', this)"><i class="fas fa-plus-circle"></i> Add</div>
-    <div class="nav-item" onclick="switchView('history', this)"><i class="fas fa-list"></i> History</div>
-    <div class="nav-item" onclick="switchView('report', this)"><i class="fas fa-file-invoice"></i> Bill</div>
-    <div class="nav-item" onclick="switchView('settings', this)"><i class="fas fa-cog"></i> Settings</div>
+    <div class="nav-item active" onclick="switchView('add', this)"><i class="fas fa-plus"></i>Add</div>
+    <div class="nav-item" onclick="switchView('history', this)"><i class="fas fa-list"></i>History</div>
+    <div class="nav-item" onclick="switchView('report', this)"><i class="fas fa-file"></i>Bill</div>
+    <div class="nav-item" onclick="switchView('settings', this)"><i class="fas fa-cog"></i>Settings</div>
 </div>
+<div class="powered-by no-print">Powered by <strong>Piyuneel</strong> <i class="fas fa-heart heart-icon"></i></div>
 
-<!-- Powered By Footer -->
-<div class="powered-by no-print">
-    <span>Powered by</span> <strong>Piyuneel</strong> <i class="fas fa-heart heart-icon"></i>
-</div>
-
-<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
 <script>
-    let appData = {
-        officeName: "Tea Tracker",
-        manager: "Office Manager",
-        sellers: ["Canteen", "Street Vendor"],
-        records: []
-    };
-
-    let currentReportData = [];
+    let appData = { officeName: "Tea Tracker", manager: "Office Manager", sellers: ["Canteen"], records: [] };
+    let currentReportData = []; 
     let currentReportTotal = 0;
     let currentReportRange = "";
 
     window.onload = function() {
         loadData();
-        const now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         document.getElementById('entryDate').value = now.toISOString().slice(0,16);
-        const todayStr = new Date().toISOString().split('T')[0];
-        document.getElementById('reportDate').value = todayStr;
-        document.getElementById('reportStart').value = todayStr;
-        document.getElementById('reportEnd').value = todayStr;
-        updateStats();
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('reportStart').value = today;
+        document.getElementById('reportEnd').value = today;
+        document.getElementById('clearStart').value = today;
+        document.getElementById('clearEnd').value = today;
+        
+        // DEBUG: Check Library Load
+        console.log("App Loaded. jsPDF defined?", typeof window.jspdf !== 'undefined');
     };
 
     function loadData() {
-        const stored = localStorage.getItem('teaAppData_vFinal');
+        const stored = localStorage.getItem('teaAppData_vDebug');
         if (stored) appData = JSON.parse(stored);
-        
         document.getElementById('appTitle').innerText = appData.officeName;
-        document.getElementById('displayManagerName').innerText = "Manager: " + appData.manager;
+        document.getElementById('displayManagerName').innerText = "Mgr: " + appData.manager;
         document.getElementById('officeNameInput').value = appData.officeName;
         document.getElementById('managerNameInput').value = appData.manager;
         document.getElementById('previewManager').innerText = appData.manager;
-        document.getElementById('previewTitle').innerText = appData.officeName + " - Tea Expense Report";
-        
-        renderDropdowns();
-        renderSettingsList();
+        document.getElementById('previewTitle').innerText = appData.officeName + " Report";
+        renderSellers();
         loadHistory();
     }
 
     function saveData() {
-        localStorage.setItem('teaAppData_vFinal', JSON.stringify(appData));
+        localStorage.setItem('teaAppData_vDebug', JSON.stringify(appData));
         updateStats();
     }
 
-    function switchView(viewName, navElement) {
-        document.querySelectorAll('.view-section').forEach(el => el.classList.add('d-none'));
-        document.getElementById('view-' + viewName).classList.remove('d-none');
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        if(navElement) navElement.classList.add('active');
-        if(viewName === 'history') loadHistory();
+    function switchView(v, el) {
+        document.querySelectorAll('.view-section').forEach(e => e.classList.add('d-none'));
+        document.getElementById('view-'+v).classList.remove('d-none');
+        document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
+        if(el) el.classList.add('active');
+        if(v==='history') loadHistory();
     }
 
     document.getElementById('teaForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        const newRecord = {
+        appData.records.push({
             id: Date.now(),
             datetime: document.getElementById('entryDate').value,
             seller: document.getElementById('entrySeller').value,
             cups: parseInt(document.getElementById('entryCups').value),
             cost: parseFloat(document.getElementById('entryCost').value)
-        };
-        appData.records.push(newRecord);
-        appData.records.sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+        });
+        appData.records.sort((a,b) => new Date(b.datetime) - new Date(a.datetime));
         saveData();
         alert("Saved!");
         this.reset();
-        const now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         document.getElementById('entryDate').value = now.toISOString().slice(0,16);
     });
 
     function updateStats() {
         const today = new Date().toISOString().split('T')[0];
-        let total = 0;
-        appData.records.forEach(r => { if (r.datetime.startsWith(today)) total += r.cost; });
-        document.getElementById('todaySpending').innerText = "Rs. " + total.toFixed(2);
+        let t = 0; appData.records.forEach(r => { if(r.datetime.startsWith(today)) t+=r.cost; });
+        document.getElementById('todaySpending').innerText = "Rs. "+t.toFixed(2);
     }
 
     function loadHistory() {
-        const tbody = document.getElementById('recordsTableBody');
-        tbody.innerHTML = '';
+        const tb = document.getElementById('recordsTableBody'); tb.innerHTML='';
         appData.records.forEach(r => {
-            const dt = new Date(r.datetime);
-            const dateStr = dt.toLocaleDateString() + ' ' + dt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td><small>${dateStr}</small></td><td>${r.seller}</td><td class="text-end">Rs. ${r.cost.toFixed(2)}</td>`;
-            tbody.appendChild(tr);
+            const d = new Date(r.datetime);
+            tb.innerHTML += `<tr><td>${d.toLocaleDateString()} ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</td><td>${r.seller}</td><td>Rs.${r.cost.toFixed(2)}</td></tr>`;
         });
     }
 
-    function renderDropdowns() {
-        const sel = document.getElementById('entrySeller');
-        sel.innerHTML = '';
-        appData.sellers.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s; opt.innerText = s;
-            sel.appendChild(opt);
+    function renderSellers() {
+        const s = document.getElementById('entrySeller'); s.innerHTML='';
+        const ul = document.getElementById('sellersList'); ul.innerHTML='';
+        appData.sellers.forEach((name, i) => {
+            s.innerHTML += `<option value="${name}">${name}</option>`;
+            ul.innerHTML += `<li class="list-group-item d-flex justify-content-between">${name} <button class="btn btn-sm btn-danger" onclick="removeSeller(${i})">X</button></li>`;
         });
     }
-
-    function renderSettingsList() {
-        const list = document.getElementById('sellersList');
-        list.innerHTML = '';
-        appData.sellers.forEach((s, i) => {
-            const li = document.createElement('li');
-            li.className = "list-group-item d-flex justify-content-between";
-            li.innerHTML = `${s} <button class="btn btn-sm btn-danger" onclick="removeSeller(${i})">X</button>`;
-            list.appendChild(li);
-        });
-    }
-
-    function addSeller() {
-        const val = document.getElementById('newSellerName').value;
-        if(val) { appData.sellers.push(val); renderSettingsList(); renderDropdowns(); }
-    }
-    function removeSeller(i) { appData.sellers.splice(i, 1); renderSettingsList(); renderDropdowns(); }
+    function addSeller() { const v = document.getElementById('newSellerName').value; if(v){ appData.sellers.push(v); renderSellers(); } }
+    function removeSeller(i) { appData.sellers.splice(i,1); renderSellers(); }
     
     function saveSettings() {
         appData.officeName = document.getElementById('officeNameInput').value || "Tea Tracker";
         appData.manager = document.getElementById('managerNameInput').value;
         saveData();
-        document.getElementById('appTitle').innerText = appData.officeName;
-        document.getElementById('displayManagerName').innerText = "Manager: " + appData.manager;
-        document.getElementById('previewTitle').innerText = appData.officeName + " - Tea Expense Report";
-        document.getElementById('previewManager').innerText = appData.manager;
+        loadData();
         alert("Settings Saved");
         switchView('add', document.querySelector('.nav-item'));
     }
 
     function generateReport() {
-        const singleDate = document.getElementById('reportDate').value;
         const start = document.getElementById('reportStart').value;
         const end = document.getElementById('reportEnd').value;
         
-        let filtered = appData.records.filter(r => {
-            const rDate = r.datetime.split('T')[0];
-            if(singleDate) return rDate === singleDate;
-            return rDate >= start && rDate <= end;
-        });
+        // CRITICAL FIX: Filter directly from source
+        currentReportData = appData.records.filter(r => {
+            const d = r.datetime.split('T')[0];
+            return d >= start && d <= end;
+        }).sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
 
-        filtered.sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
-
-        currentReportData = filtered;
         currentReportTotal = 0;
-        const tbody = document.getElementById('previewTableBody');
-        tbody.innerHTML = '';
+        const tb = document.getElementById('previewTableBody'); tb.innerHTML='';
 
-        if (filtered.length === 0) {
-            alert("No records found for this date range.");
+        if(currentReportData.length === 0) {
+            alert("No data found.");
             document.getElementById('previewArea').classList.add('d-none');
-            document.getElementById('downloadBtn').classList.add('d-none');
             return;
         }
 
-        filtered.forEach(r => {
+        currentReportData.forEach(r => {
             currentReportTotal += r.cost;
-            const dt = new Date(r.datetime);
+            const d = new Date(r.datetime);
             const datePart = r.datetime.split('T')[0];
-            const timePart = dt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${datePart}<br><small style="color:#666">${timePart}</small></td>
-                <td>${r.seller}</td>
-                <td>${r.cups}</td>
-                <td>Rs. ${r.cost.toFixed(2)}</td>
-            `;
-            tbody.appendChild(tr);
+            const timePart = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            tb.innerHTML += `<tr><td>${datePart}<br><small>${timePart}</small></td><td>${r.seller}</td><td>${r.cups}</td><td>Rs.${r.cost.toFixed(2)}</td></tr>`;
         });
 
-        currentReportRange = singleDate ? `Date: ${singleDate}` : `From: ${start} To: ${end}`;
+        currentReportRange = `${start} to ${end}`;
         document.getElementById('previewDateRange').innerText = currentReportRange;
         document.getElementById('previewTotal').innerText = "Rs. " + currentReportTotal.toFixed(2);
-        
         document.getElementById('previewArea').classList.remove('d-none');
-        document.getElementById('downloadBtn').classList.remove('d-none');
-        document.getElementById('previewArea').scrollIntoView({ behavior: 'smooth' });
+        
+        console.log("Report Generated. Rows:", currentReportData.length);
     }
 
-    // Detect mobile device
-    // ── CLEAR DATA FUNCTIONS ──
-    let pendingClearAction = null;
-
-    function confirmClearRange() {
-        const start = document.getElementById('clearStart').value;
-        const end   = document.getElementById('clearEnd').value;
-        if (!start || !end) { alert("Please select both From and To dates."); return; }
-        if (start > end)    { alert("'From' date must be before 'To' date."); return; }
-
-        const matching = appData.records.filter(r => {
-            const d = r.datetime.split('T')[0];
-            return d >= start && d <= end;
-        });
-        if (matching.length === 0) { alert("No records found in that date range."); return; }
-
-        document.getElementById('confirmModalMsg').innerHTML =
-            `Delete <strong>${matching.length} record(s)</strong> from <strong>${start}</strong> to <strong>${end}</strong>?`;
-
-        pendingClearAction = () => {
-            appData.records = appData.records.filter(r => {
-                const d = r.datetime.split('T')[0];
-                return !(d >= start && d <= end);
-            });
-            saveData();
-            loadHistory();
-            bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
-            showToast(`✅ ${matching.length} record(s) deleted.`);
-        };
-
-        new bootstrap.Modal(document.getElementById('confirmModal')).show();
-    }
-
-    function confirmClearAll() {
-        if (appData.records.length === 0) { alert("No records to delete."); return; }
-        document.getElementById('confirmModalMsg').innerHTML =
-            `Delete <strong>all ${appData.records.length} record(s)</strong>? This will wipe the entire history.`;
-
-        pendingClearAction = () => {
-            const count = appData.records.length;
-            appData.records = [];
-            saveData();
-            loadHistory();
-            bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
-            showToast(`✅ All ${count} record(s) deleted.`);
-        };
-
-        new bootstrap.Modal(document.getElementById('confirmModal')).show();
-    }
-
-    // Wire confirm button once DOM is ready
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('confirmModalBtn').addEventListener('click', function() {
-            if (pendingClearAction) { pendingClearAction(); pendingClearAction = null; }
-        });
-    });
-
-    function showToast(msg) {
-        const toast = document.createElement('div');
-        toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 22px;border-radius:25px;z-index:9999;font-size:0.9rem;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
-        toast.innerText = msg;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
-
-    function isMobile() {
-        return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
-    }
-
-    // Build the jsPDF document and return it
-    function buildPDFDoc() {
-        if (typeof window.jspdf === 'undefined') throw new Error("PDF Library not loaded. Check internet connection.");
-        if (!currentReportData || currentReportData.length === 0) throw new Error("No data to print.");
-
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-
-        // Verify autoTable plugin loaded
-        if (typeof doc.autoTable !== 'function') throw new Error("PDF table plugin not loaded. Check internet connection.");
-        const officeName = appData.officeName;
-
-        // Header
-        doc.setFontSize(18);
-        doc.setTextColor(40);
-        doc.text(`${officeName} - Tea Expense Report`, 105, 20, null, null, "center");
-        doc.setFontSize(12);
-        doc.setTextColor(100);
-        doc.text(`Manager: ${appData.manager}`, 105, 30, null, null, "center");
-        doc.text(currentReportRange, 105, 38, null, null, "center");
-
-        // Table
-        const tableColumn = ["Date & Time", "Seller", "Cups", "Cost"];
-        const tableRows = currentReportData.map(r => {
-            const dt = new Date(r.datetime);
-            const datePart = r.datetime.split('T')[0];
-            const timePart = dt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            return [`${datePart}\n${timePart}`, r.seller, r.cups.toString(), `Rs. ${r.cost.toFixed(2)}`];
-        });
-
-        doc.autoTable({
-            head: [tableColumn],
-            body: tableRows,
-            startY: 45,
-            theme: 'grid',
-            headStyles: { fillColor: [44, 62, 80] },
-            didParseCell: function(data) {
-                if (data.section === 'body') data.cell.styles.textColor = [0, 0, 0];
-            }
-        });
-
-        // Total row
-        const afterTableY = doc.lastAutoTable.finalY + 8;
-        doc.setFontSize(12);
-        doc.setFont(undefined, 'bold');
-        doc.setTextColor(0);
-        doc.text(`Total: Rs. ${currentReportTotal.toFixed(2)}`, 190, afterTableY, null, null, "right");
-
-        // Signatures
-        const finalY = afterTableY + 20;
-        doc.setFontSize(10);
-        doc.setFont(undefined, 'normal');
-        doc.line(20, finalY, 60, finalY);
-        doc.text("Manager", 20, finalY + 5);
-        doc.line(150, finalY, 190, finalY);
-        doc.text("Seller", 150, finalY + 5);
-
-        return doc;
-    }
-
-    // ROBUST PDF DOWNLOAD FUNCTION — works on mobile & desktop
-    function forcePDFDownload() {
+    // --- THE DEBUGGED PDF FUNCTION ---
+    function debugAndGeneratePDF() {
         const btn = document.getElementById('downloadBtn');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
-        btn.disabled = true;
-
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        
+        // Delay to ensure UI updates
         setTimeout(() => {
             try {
-                const doc = buildPDFDoc();
-                const officeName = appData.officeName;
-                const fileName = `${officeName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_bill_${new Date().toISOString().split('T')[0]}.pdf`;
-
-                if (isMobile()) {
-                    // ── MOBILE FIX ──
-                    // Blob URL opens natively in Chrome/Samsung/Firefox PDF viewer.
-                    // NEVER use data: URI inside an iframe — Android blocks it silently (blank page).
-                    const blob = doc.output('blob');
-                    const blobUrl = URL.createObjectURL(blob);
-
-                    const link = document.createElement('a');
-                    link.href = blobUrl;
-                    link.download = fileName;   // triggers download on supported browsers
-                    link.target = '_blank';      // fallback: opens PDF viewer tab
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-
-                    // Keep blob alive long enough for download to start
-                    setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
-                } else {
-                    // ── DESKTOP ──
-                    doc.save(fileName);
+                console.log("--- START PDF GENERATION ---");
+                console.log("1. jsPDF loaded?", typeof window.jspdf !== 'undefined');
+                console.log("2. Data Count:", currentReportData.length);
+                
+                if (!currentReportData || currentReportData.length === 0) {
+                    throw new Error("Data array is empty! Did you click 'View Details' first?");
+                }
+                if (typeof window.jspdf === 'undefined') {
+                    throw new Error("jsPDF Library not loaded. Check internet.");
                 }
 
-                btn.innerHTML = '<i class="fas fa-check"></i> Done!';
-                setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 3000);
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const fileName = `tea_bill_${new Date().toISOString().split('T')[0]}.pdf`;
 
-            } catch (error) {
-                console.error(error);
-                alert("❌ Error: " + error.message);
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+                // Header
+                doc.setFontSize(16);
+                doc.text(`${appData.officeName} - Expense Report`, 105, 20, null, null, "center");
+                doc.setFontSize(12);
+                doc.text(`Manager: ${appData.manager}`, 105, 30, null, null, "center");
+                doc.text(`Period: ${currentReportRange}`, 105, 38, null, null, "center");
+
+                // Prepare Rows explicitly
+                const rows = currentReportData.map(r => {
+                    const d = new Date(r.datetime);
+                    return [
+                        `${r.datetime.split('T')[0]}\n${d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`,
+                        r.seller,
+                        r.cups.toString(),
+                        `Rs. ${r.cost.toFixed(2)}`
+                    ];
+                });
+
+                console.log("3. Rows prepared for PDF:", rows.length);
+
+                doc.autoTable({
+                    head: [['Date & Time', 'Seller', 'Cups', 'Cost']],
+                    body: rows,
+                    startY: 45,
+                    theme: 'grid',
+                    headStyles: { fillColor: [44, 62, 80] },
+                    didParseCell: function(data) {
+                        if (data.section === 'body') data.cell.styles.textColor = [0,0,0];
+                    },
+                    footer: function(data) {
+                        if (data.pageNumber === data.pageCount) {
+                            doc.setFontSize(12);
+                            doc.setFont(undefined, 'bold');
+                            doc.text(`Total: Rs. ${currentReportTotal.toFixed(2)}`, 190, data.cursor.y + 10, null, null, "right");
+                        }
+                    }
+                });
+
+                // Signatures
+                const y = doc.lastAutoTable.finalY + 20;
+                doc.line(20, y, 60, y); doc.text("Manager", 20, y+5);
+                doc.line(150, y, 190, y); doc.text("Seller", 150, y+5);
+
+                // Save
+                console.log("4. Saving file...");
+                doc.save(fileName);
+                
+                btn.innerHTML = '<i class="fas fa-check"></i> Done!';
+                alert("✅ PDF Downloaded! Check your Downloads folder.");
+                console.log("--- END PDF GENERATION ---");
+
+            } catch (err) {
+                console.error("PDF ERROR:", err);
+                alert("❌ ERROR: " + err.message + "\n\nCheck console for details.");
+                btn.innerHTML = '<i class="fas fa-file-pdf"></i> Try Again';
             }
-        }, 400);
+        }, 500);
+    }
+
+    function clearPeriod() {
+        const s = document.getElementById('clearStart').value;
+        const e = document.getElementById('clearEnd').value;
+        if(!s || !e) return alert("Select dates");
+        if(confirm(`Delete records from ${s} to ${e}?`)) {
+            appData.records = appData.records.filter(r => {
+                const d = r.datetime.split('T')[0];
+                return d < s || d > e;
+            });
+            saveData(); loadHistory(); alert("Cleared.");
+        }
+    }
+    function resetAll() {
+        if(prompt("Type DELETE to confirm") === "DELETE") {
+            localStorage.removeItem('teaAppData_vDebug');
+            location.reload();
+        }
     }
 </script>
 </body>
