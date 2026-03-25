@@ -169,6 +169,53 @@
             <ul class="list-group mb-3" id="sellersList"></ul>
             <button class="btn btn-primary w-100" onclick="saveSettings()">Save Changes</button>
         </div>
+
+        <!-- CLEAR DATA CARD -->
+        <div class="card p-4 mt-0" style="border: 1.5px solid #dc3545 !important;">
+            <h6 class="text-danger"><i class="fas fa-trash-alt me-1"></i> Clear Records</h6>
+            <p class="text-muted small mb-3">Use this after a bill is paid to remove settled records. This cannot be undone.</p>
+
+            <label class="form-label small fw-bold">Clear Specific Paid Period</label>
+            <div class="row g-2 mb-2">
+                <div class="col-6">
+                    <label class="form-label text-muted" style="font-size:0.75rem;">From</label>
+                    <input type="date" class="form-control form-control-sm" id="clearStart">
+                </div>
+                <div class="col-6">
+                    <label class="form-label text-muted" style="font-size:0.75rem;">To</label>
+                    <input type="date" class="form-control form-control-sm" id="clearEnd">
+                </div>
+            </div>
+            <button class="btn btn-outline-danger w-100 mb-3" onclick="confirmClearRange()">
+                <i class="fas fa-calendar-times me-1"></i> Clear Selected Period
+            </button>
+
+            <hr class="my-2">
+
+            <button class="btn btn-danger w-100" onclick="confirmClearAll()">
+                <i class="fas fa-exclamation-triangle me-1"></i> Clear ALL Records
+            </button>
+        </div>
+    </div>
+
+    <!-- CONFIRM MODAL -->
+    <div class="modal fade" id="confirmModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title text-danger"><i class="fas fa-trash-alt me-2"></i>Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmModalMsg" class="mb-1"></p>
+                    <p class="text-danger small fw-bold mb-0"><i class="fas fa-exclamation-circle me-1"></i>This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-danger rounded-pill px-4" id="confirmModalBtn">Yes, Delete</button>
+                </div>
+            </div>
+        </div>
     </div>
 
 </div>
@@ -372,6 +419,70 @@
     }
 
     // Detect mobile device
+    // ── CLEAR DATA FUNCTIONS ──
+    let pendingClearAction = null;
+
+    function confirmClearRange() {
+        const start = document.getElementById('clearStart').value;
+        const end   = document.getElementById('clearEnd').value;
+        if (!start || !end) { alert("Please select both From and To dates."); return; }
+        if (start > end)    { alert("'From' date must be before 'To' date."); return; }
+
+        const matching = appData.records.filter(r => {
+            const d = r.datetime.split('T')[0];
+            return d >= start && d <= end;
+        });
+        if (matching.length === 0) { alert("No records found in that date range."); return; }
+
+        document.getElementById('confirmModalMsg').innerHTML =
+            `Delete <strong>${matching.length} record(s)</strong> from <strong>${start}</strong> to <strong>${end}</strong>?`;
+
+        pendingClearAction = () => {
+            appData.records = appData.records.filter(r => {
+                const d = r.datetime.split('T')[0];
+                return !(d >= start && d <= end);
+            });
+            saveData();
+            loadHistory();
+            bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+            showToast(`✅ ${matching.length} record(s) deleted.`);
+        };
+
+        new bootstrap.Modal(document.getElementById('confirmModal')).show();
+    }
+
+    function confirmClearAll() {
+        if (appData.records.length === 0) { alert("No records to delete."); return; }
+        document.getElementById('confirmModalMsg').innerHTML =
+            `Delete <strong>all ${appData.records.length} record(s)</strong>? This will wipe the entire history.`;
+
+        pendingClearAction = () => {
+            const count = appData.records.length;
+            appData.records = [];
+            saveData();
+            loadHistory();
+            bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+            showToast(`✅ All ${count} record(s) deleted.`);
+        };
+
+        new bootstrap.Modal(document.getElementById('confirmModal')).show();
+    }
+
+    // Wire confirm button once DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('confirmModalBtn').addEventListener('click', function() {
+            if (pendingClearAction) { pendingClearAction(); pendingClearAction = null; }
+        });
+    });
+
+    function showToast(msg) {
+        const toast = document.createElement('div');
+        toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 22px;border-radius:25px;z-index:9999;font-size:0.9rem;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
+        toast.innerText = msg;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
     function isMobile() {
         return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
     }
@@ -383,6 +494,9 @@
 
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
+
+        // Verify autoTable plugin loaded
+        if (typeof doc.autoTable !== 'function') throw new Error("PDF table plugin not loaded. Check internet connection.");
         const officeName = appData.officeName;
 
         // Header
@@ -448,25 +562,23 @@
 
                 if (isMobile()) {
                     // ── MOBILE FIX ──
-                    // Convert to base64 data URI and open in new tab.
-                    // The browser/WebView will show a native PDF viewer with its own save/share option.
-                    const dataUri = doc.output('datauristring');
-                    const newTab = window.open();
-                    if (newTab) {
-                        newTab.document.write(
-                            `<html><head><title>${fileName}</title></head>` +
-                            `<body style="margin:0">` +
-                            `<iframe src="${dataUri}" style="width:100%;height:100vh;border:none;"></iframe>` +
-                            `</body></html>`
-                        );
-                        newTab.document.close();
-                    } else {
-                        // Popup blocked fallback — use doc.save() directly
-                        doc.save(fileName);
-                    }
+                    // Blob URL opens natively in Chrome/Samsung/Firefox PDF viewer.
+                    // NEVER use data: URI inside an iframe — Android blocks it silently (blank page).
+                    const blob = doc.output('blob');
+                    const blobUrl = URL.createObjectURL(blob);
+
+                    const link = document.createElement('a');
+                    link.href = blobUrl;
+                    link.download = fileName;   // triggers download on supported browsers
+                    link.target = '_blank';      // fallback: opens PDF viewer tab
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    // Keep blob alive long enough for download to start
+                    setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
                 } else {
                     // ── DESKTOP ──
-                    // jsPDF's save() uses FileSaver internally and works reliably on desktop.
                     doc.save(fileName);
                 }
 
