@@ -139,12 +139,12 @@
             </div>
         </div>
         
-        <!-- Updated Button -->
-        <button id="downloadBtn" class="btn btn-dark w-100 mt-3 d-none" onclick="openPDFInNewTab()">
+        <!-- Button with ID for status update -->
+        <button id="downloadBtn" class="btn btn-dark w-100 mt-3 d-none" onclick="handlePDFClick()">
             <i class="fas fa-file-pdf"></i> Open / Download PDF
         </button>
         <p class="text-center text-muted small mt-2">
-            <i class="fas fa-info-circle"></i> The PDF will open in a new tab. Tap the <b>Download Icon</b> there to save.
+            <i class="fas fa-info-circle"></i> If nothing happens, check your popup blocker settings.
         </p>
     </div>
 
@@ -186,7 +186,7 @@
     <span>Powered by</span> <strong>Piyuneel</strong> <i class="fas fa-heart heart-icon"></i>
 </div>
 
-<!-- Scripts -->
+<!-- Scripts: Using specific versions known to work -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
@@ -213,10 +213,17 @@
         document.getElementById('reportStart').value = todayStr;
         document.getElementById('reportEnd').value = todayStr;
         updateStats();
+        
+        // Debug: Check if libraries loaded
+        if(typeof window.jspdf === 'undefined') {
+            console.error("jsPDF library failed to load!");
+        } else {
+            console.log("jsPDF library loaded successfully.");
+        }
     };
 
     function loadData() {
-        const stored = localStorage.getItem('teaAppData_v8');
+        const stored = localStorage.getItem('teaAppData_v9');
         if (stored) appData = JSON.parse(stored);
         
         document.getElementById('appTitle').innerText = appData.officeName;
@@ -232,7 +239,7 @@
     }
 
     function saveData() {
-        localStorage.setItem('teaAppData_v8', JSON.stringify(appData));
+        localStorage.setItem('teaAppData_v9', JSON.stringify(appData));
         updateStats();
     }
 
@@ -371,16 +378,45 @@
         document.getElementById('previewArea').scrollIntoView({ behavior: 'smooth' });
     }
 
-    // ✅ FIXED: Mobile-compatible PDF download using base64 data URI + hidden anchor
-    function openPDFInNewTab() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
+    // WRAPPER FUNCTION TO CATCH ERRORS
+    function handlePDFClick() {
+        const btn = document.getElementById('downloadBtn');
+        const originalText = btn.innerHTML;
+        
+        // Visual feedback that tap was registered
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        btn.disabled = true;
 
+        setTimeout(() => {
+            try {
+                openPDFInNewTab();
+            } catch (error) {
+                console.error("PDF Generation Error:", error);
+                alert("❌ ERROR GENERATING PDF:\n\n" + error.message + "\n\nPlease check your internet connection (libraries need to load) or try adding a record first.");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }, 100);
+    }
+
+    function openPDFInNewTab() {
+        // 1. CHECK LIBRARY
+        if (typeof window.jspdf === 'undefined') {
+            throw new Error("PDF Library (jsPDF) not loaded. Check internet connection.");
+        }
+        const { jsPDF } = window.jspdf;
+
+        // 2. CHECK DATA
+        if (!currentReportData || currentReportData.length === 0) {
+            throw new Error("No data to print. Please generate the report first.");
+        }
+
+        const doc = new jsPDF();
         const officeName = appData.officeName;
         const managerName = appData.manager;
         const fileName = `${officeName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_tea_bill_${new Date().toISOString().split('T')[0]}.pdf`;
 
-        // Build PDF content
+        // 3. BUILD PDF
         doc.setFontSize(18);
         doc.setTextColor(40);
         doc.text(`${officeName} - Tea Expense Report`, 105, 20, null, null, "center");
@@ -397,12 +433,14 @@
             const dt = new Date(r.datetime);
             const datePart = r.datetime.split('T')[0];
             const timePart = dt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            tableRows.push([
+            
+            const rowData = [
                 `${datePart}\n${timePart}`,
                 r.seller,
                 r.cups.toString(),
                 `Rs. ${r.cost.toFixed(2)}`
-            ]);
+            ];
+            tableRows.push(rowData);
         });
 
         doc.autoTable({
@@ -430,24 +468,29 @@
         doc.setFontSize(10);
         doc.setFont(undefined, 'normal');
         doc.setTextColor(0, 0, 0);
+        
         doc.line(20, finalY, 60, finalY);
         doc.text("Manager", 20, finalY + 5);
         doc.line(150, finalY, 190, finalY);
         doc.text("Seller", 150, finalY + 5);
 
-        // ✅ Use base64 data URI + hidden <a> tag — works on Android WebView & mobile browsers
-        try {
-            const pdfDataUri = doc.output('datauristring');
-            const link = document.createElement('a');
-            link.href = pdfDataUri;
-            link.download = fileName;
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        } catch (e) {
-            // Fallback: use jsPDF's built-in save (works on most browsers)
-            doc.save(fileName);
+        // 4. OPEN IN NEW TAB
+        const pdfBlob = doc.output('blob');
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        
+        const newWindow = window.open(pdfUrl, '_blank');
+        
+        // Reset button
+        const btn = document.getElementById('downloadBtn');
+        btn.innerHTML = '<i class="fas fa-check"></i> Opened!';
+        btn.disabled = false;
+        setTimeout(() => {
+            btn.innerHTML = '<i class="fas fa-file-pdf"></i> Open / Download PDF';
+            btn.disabled = false;
+        }, 3000);
+
+        if (!newWindow) {
+            alert("⚠️ Popup Blocked! \n\nYour browser blocked the new tab. Please allow popups for this site and try again.");
         }
     }
 </script>
