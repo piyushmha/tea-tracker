@@ -1,0 +1,392 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Office Tea Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        body { background-color: #f0f2f5; padding-bottom: 100px; }
+        .card { border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .header-bg { background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%); color: white; padding: 25px; border-radius: 0 0 20px 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .nav-bottom { position: fixed; bottom: 0; width: 100%; background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 1000; display: flex; justify-content: space-around; padding: 10px 0; }
+        .nav-item { text-align: center; color: #666; font-size: 0.8rem; cursor: pointer; }
+        .nav-item.active { color: #4e4376; font-weight: bold; }
+        .nav-item i { font-size: 1.4rem; display: block; margin-bottom: 2px; }
+        
+        /* Powered By Footer Styles */
+        .powered-by {
+            position: fixed;
+            bottom: 60px;
+            width: 100%;
+            text-align: center;
+            background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
+            color: white;
+            padding: 8px 0;
+            font-size: 0.75rem;
+            z-index: 999;
+        }
+        .powered-by strong {
+            color: #ffd700;
+            margin: 0 5px;
+        }
+        .heart-icon {
+            color: #ff4757;
+            animation: heartbeat 1.5s infinite;
+            margin-left: 5px;
+        }
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        
+        @media print {
+            .nav-bottom, .no-print, .header-bg, .powered-by { display: none !important; }
+            body { background: white; padding: 0; }
+            .card { box-shadow: none; border: 1px solid #ddd; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header-bg text-center">
+    <h3><i class="fas fa-mug-hot"></i> Tea Manager</h3>
+    <p id="displayManagerName" style="font-size: 0.9rem; opacity: 0.9;">Manager: Loading...</p>
+</div>
+
+<div class="container">
+
+    <!-- VIEW 1: ADD ENTRY -->
+    <div id="view-add" class="view-section">
+        <div class="card p-4">
+            <h5 class="mb-3">New Purchase</h5>
+            <form id="teaForm">
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Date & Time</label>
+                    <input type="datetime-local" class="form-control" id="entryDate" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Tea Seller</label>
+                    <select class="form-select" id="entrySeller" required></select>
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="form-label text-muted small">Cups</label>
+                        <input type="number" class="form-control" id="entryCups" min="1" required>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <!-- Updated Label -->
+                        <label class="form-label text-muted small">Total Cost (Rs.)</label>
+                        <input type="number" class="form-control" id="entryCost" step="0.01" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2 rounded-pill">Save Entry</button>
+            </form>
+        </div>
+        
+        <div class="card p-3 bg-white">
+            <div class="d-flex justify-content-between">
+                <span>Today's Total:</span>
+                <strong id="todaySpending" class="text-success">Rs. 0.00</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW 2: HISTORY -->
+    <div id="view-history" class="view-section d-none">
+        <div class="card p-3">
+            <h5 class="mb-3">History</h5>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Date/Time</th>
+                            <th>Seller</th>
+                            <th>Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW 3: REPORTS -->
+    <div id="view-report" class="view-section d-none">
+        <div class="card p-4">
+            <h5>Generate Bill</h5>
+            <div class="mb-3">
+                <label class="form-label small">Select Date</label>
+                <input type="date" class="form-control" id="reportDate">
+            </div>
+            <div class="mb-3">
+                <label class="form-label small">Or Date Range</label>
+                <div class="row">
+                    <div class="col"><input type="date" class="form-control" id="reportStart"></div>
+                    <div class="col"><input type="date" class="form-control" id="reportEnd"></div>
+                </div>
+            </div>
+            <button class="btn btn-success w-100 mb-3" onclick="generateReport()">View Details</button>
+        </div>
+
+        <div id="printableArea" class="card p-4 mt-3 d-none">
+            <h3 class="text-center">Tea Expense Report</h3>
+            <p class="text-center text-muted" id="printManagerName"></p>
+            <p class="text-center" id="printDateRange"></p>
+            
+            <table class="table table-bordered mt-3">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Seller</th>
+                        <th>Cups</th>
+                        <th>Cost</th>
+                    </tr>
+                </thead>
+                <tbody id="printTableBody"></tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="3" class="text-end">Total:</th>
+                        <th id="printTotal">Rs. 0.00</th>
+                    </tr>
+                </tfoot>
+            </table>
+            <div class="mt-4 d-flex justify-content-between">
+                <div class="text-center"><br>___________<br>Manager</div>
+                <div class="text-center"><br>___________<br>Seller</div>
+            </div>
+        </div>
+        <button id="printBtn" class="btn btn-dark w-100 mt-3 d-none" onclick="printPDF()"><i class="fas fa-file-pdf"></i> Download PDF</button>
+    </div>
+
+    <!-- VIEW 4: SETTINGS -->
+    <div id="view-settings" class="view-section d-none">
+        <div class="card p-4">
+            <h5>Settings</h5>
+            <div class="mb-3">
+                <label>Manager Name</label>
+                <input type="text" class="form-control" id="managerNameInput">
+            </div>
+            <hr>
+            <h6>Add Seller</h6>
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" id="newSellerName">
+                <button class="btn btn-outline-primary" onclick="addSeller()">Add</button>
+            </div>
+            <ul class="list-group mb-3" id="sellersList"></ul>
+            <button class="btn btn-primary w-100" onclick="saveSettings()">Save Changes</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- Bottom Navigation -->
+<div class="nav-bottom no-print">
+    <div class="nav-item active" onclick="switchView('add', this)">
+        <i class="fas fa-plus-circle"></i> Add
+    </div>
+    <div class="nav-item" onclick="switchView('history', this)">
+        <i class="fas fa-list"></i> History
+    </div>
+    <div class="nav-item" onclick="switchView('report', this)">
+        <i class="fas fa-file-invoice"></i> Bill
+    </div>
+    <div class="nav-item" onclick="switchView('settings', this)">
+        <i class="fas fa-cog"></i> Settings
+    </div>
+</div>
+
+<!-- Powered By Footer -->
+<div class="powered-by no-print">
+    <span>Powered by</span> <strong>Piyuneel</strong> <i class="fas fa-heart heart-icon"></i>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<script>
+    let appData = {
+        manager: "Office Manager",
+        sellers: ["Canteen", "Street Vendor"],
+        records: []
+    };
+
+    window.onload = function() {
+        loadData();
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('entryDate').value = now.toISOString().slice(0,16);
+        
+        const todayStr = new Date().toISOString().split('T')[0];
+        document.getElementById('reportDate').value = todayStr;
+        document.getElementById('reportStart').value = todayStr;
+        document.getElementById('reportEnd').value = todayStr;
+        
+        updateStats();
+    };
+
+    function loadData() {
+        const stored = localStorage.getItem('teaAppData_v2');
+        if (stored) appData = JSON.parse(stored);
+        
+        document.getElementById('displayManagerName').innerText = "Manager: " + appData.manager;
+        document.getElementById('managerNameInput').value = appData.manager;
+        document.getElementById('printManagerName').innerText = appData.manager;
+        
+        renderDropdowns();
+        renderSettingsList();
+        loadHistory();
+    }
+
+    function saveData() {
+        localStorage.setItem('teaAppData_v2', JSON.stringify(appData));
+        updateStats();
+    }
+
+    function switchView(viewName, navElement) {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.add('d-none'));
+        document.getElementById('view-' + viewName).classList.remove('d-none');
+        
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        if(navElement) navElement.classList.add('active');
+
+        if(viewName === 'history') loadHistory();
+    }
+
+    document.getElementById('teaForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const newRecord = {
+            id: Date.now(),
+            datetime: document.getElementById('entryDate').value,
+            seller: document.getElementById('entrySeller').value,
+            cups: parseInt(document.getElementById('entryCups').value),
+            cost: parseFloat(document.getElementById('entryCost').value)
+        };
+        appData.records.push(newRecord);
+        appData.records.sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+        
+        saveData();
+        alert("Saved!");
+        this.reset();
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('entryDate').value = now.toISOString().slice(0,16);
+    });
+
+    function updateStats() {
+        const today = new Date().toISOString().split('T')[0];
+        let total = 0;
+        appData.records.forEach(r => {
+            if (r.datetime.startsWith(today)) total += r.cost;
+        });
+        // Updated Currency Symbol
+        document.getElementById('todaySpending').innerText = "Rs. " + total.toFixed(2);
+    }
+
+    function loadHistory() {
+        const tbody = document.getElementById('recordsTableBody');
+        tbody.innerHTML = '';
+        appData.records.forEach(r => {
+            const dt = new Date(r.datetime);
+            const dateStr = dt.toLocaleDateString() + ' ' + dt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            const tr = document.createElement('tr');
+            // Updated Currency Symbol in Table
+            tr.innerHTML = `
+                <td><small>${dateStr}</small></td>
+                <td>${r.seller}</td>
+                <td class="text-end">Rs. ${r.cost.toFixed(2)}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderDropdowns() {
+        const sel = document.getElementById('entrySeller');
+        sel.innerHTML = '';
+        appData.sellers.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s; opt.innerText = s;
+            sel.appendChild(opt);
+        });
+    }
+
+    function renderSettingsList() {
+        const list = document.getElementById('sellersList');
+        list.innerHTML = '';
+        appData.sellers.forEach((s, i) => {
+            const li = document.createElement('li');
+            li.className = "list-group-item d-flex justify-content-between";
+            li.innerHTML = `${s} <button class="btn btn-sm btn-danger" onclick="removeSeller(${i})">X</button>`;
+            list.appendChild(li);
+        });
+    }
+
+    function addSeller() {
+        const val = document.getElementById('newSellerName').value;
+        if(val) { appData.sellers.push(val); renderSettingsList(); renderDropdowns(); }
+    }
+    function removeSeller(i) { appData.sellers.splice(i, 1); renderSettingsList(); renderDropdowns(); }
+    
+    function saveSettings() {
+        appData.manager = document.getElementById('managerNameInput').value;
+        saveData();
+        document.getElementById('displayManagerName').innerText = "Manager: " + appData.manager;
+        alert("Settings Saved");
+        switchView('add', document.querySelector('.nav-item'));
+    }
+
+    function generateReport() {
+        const singleDate = document.getElementById('reportDate').value;
+        const start = document.getElementById('reportStart').value;
+        const end = document.getElementById('reportEnd').value;
+        
+        let filtered = appData.records.filter(r => {
+            const rDate = r.datetime.split('T')[0];
+            if(singleDate) return rDate === singleDate;
+            return rDate >= start && rDate <= end;
+        });
+
+        filtered.sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
+
+        const tbody = document.getElementById('printTableBody');
+        tbody.innerHTML = '';
+        let total = 0;
+
+        filtered.forEach(r => {
+            total += r.cost;
+            const dt = new Date(r.datetime);
+            const timeStr = dt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            const tr = document.createElement('tr');
+            // Updated Currency Symbol in PDF
+            tr.innerHTML = `
+                <td>${r.datetime.split('T')[0]} <br><small class="text-muted">${timeStr}</small></td>
+                <td>${r.seller}</td>
+                <td>${r.cups}</td>
+                <td>Rs. ${r.cost.toFixed(2)}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('printDateRange').innerText = singleDate ? `Date: ${singleDate}` : `From: ${start} To: ${end}`;
+        // Updated Currency Symbol in Total
+        document.getElementById('printTotal').innerText = "Rs. " + total.toFixed(2);
+        
+        document.getElementById('printableArea').classList.remove('d-none');
+        document.getElementById('printBtn').classList.remove('d-none');
+    }
+
+    function printPDF() {
+        const element = document.getElementById('printableArea');
+        html2pdf().from(element).save('Tea_Bill.pdf');
+    }
+</script>
+</body>
+</html>
+```
