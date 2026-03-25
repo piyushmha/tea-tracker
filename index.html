@@ -31,7 +31,6 @@
         .heart-icon { color: #ff4757; animation: heartbeat 1.5s infinite; margin-left: 5px; }
         @keyframes heartbeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
 
-        /* Table Styling for Screen */
         .bill-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
         .bill-table th, .bill-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         .bill-table th { background-color: #f8f9fa; font-weight: bold; }
@@ -118,7 +117,7 @@
             <button class="btn btn-success w-100 mb-3" onclick="generateReport()">View Details</button>
         </div>
 
-        <!-- Preview Area (Screen Only) -->
+        <!-- Preview Area -->
         <div id="previewArea" class="card p-4 mt-3 d-none">
             <h3 class="text-center" id="previewTitle">Tea Expense Report</h3>
             <p class="text-center text-muted" id="previewManager"></p>
@@ -146,7 +145,12 @@
                 <div class="text-center"><br>___________<br>Seller</div>
             </div>
         </div>
-        <button id="downloadBtn" class="btn btn-dark w-100 mt-3 d-none" onclick="generatePDFDirect()"><i class="fas fa-file-pdf"></i> Download PDF</button>
+        
+        <!-- Updated Button for Mobile -->
+        <button id="downloadBtn" class="btn btn-dark w-100 mt-3 d-none" onclick="generateAndSharePDF()">
+            <i class="fas fa-file-pdf"></i> Save / Share PDF
+        </button>
+        <p class="text-center text-muted small mt-2 d-none" id="mobileHint">On mobile, choose "Save to Files" or "Share"</p>
     </div>
 
     <!-- VIEW 4: SETTINGS -->
@@ -189,7 +193,6 @@
 
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- We only need jsPDF now, not html2pdf -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
@@ -201,7 +204,6 @@
         records: []
     };
 
-    // Global variable to store current report data for PDF generation
     let currentReportData = [];
     let currentReportTotal = 0;
     let currentReportRange = "";
@@ -216,10 +218,15 @@
         document.getElementById('reportStart').value = todayStr;
         document.getElementById('reportEnd').value = todayStr;
         updateStats();
+        
+        // Detect mobile to show hint
+        if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)){
+            document.getElementById('mobileHint').classList.remove('d-none');
+        }
     };
 
     function loadData() {
-        const stored = localStorage.getItem('teaAppData_v6');
+        const stored = localStorage.getItem('teaAppData_v7');
         if (stored) appData = JSON.parse(stored);
         
         document.getElementById('appTitle').innerText = appData.officeName;
@@ -235,7 +242,7 @@
     }
 
     function saveData() {
-        localStorage.setItem('teaAppData_v6', JSON.stringify(appData));
+        localStorage.setItem('teaAppData_v7', JSON.stringify(appData));
         updateStats();
     }
 
@@ -337,7 +344,6 @@
 
         filtered.sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
 
-        // Store data globally for PDF generation
         currentReportData = filtered;
         currentReportTotal = 0;
         const tbody = document.getElementById('previewTableBody');
@@ -375,8 +381,8 @@
         document.getElementById('previewArea').scrollIntoView({ behavior: 'smooth' });
     }
 
-    // NEW DIRECT PDF GENERATION FUNCTION
-    function generatePDFDirect() {
+    // MOBILE-FRIENDLY PDF GENERATION
+    async function generateAndSharePDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
@@ -384,20 +390,16 @@
         const managerName = appData.manager;
         const fileName = `${officeName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_tea_bill_${new Date().toISOString().split('T')[0]}.pdf`;
 
-        // 1. Title
+        // 1. Build PDF Content
         doc.setFontSize(18);
         doc.setTextColor(40);
         doc.text(`${officeName} - Tea Expense Report`, 105, 20, null, null, "center");
 
-        // 2. Manager Name
         doc.setFontSize(12);
         doc.setTextColor(100);
         doc.text(`Manager: ${managerName}`, 105, 30, null, null, "center");
-
-        // 3. Date Range
         doc.text(currentReportRange, 105, 38, null, null, "center");
 
-        // 4. Prepare Table Data
         const tableColumn = ["Date & Time", "Seller", "Cups", "Cost"];
         const tableRows = [];
 
@@ -407,7 +409,7 @@
             const timePart = dt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             
             const rowData = [
-                `${datePart}\n${timePart}`, // Multiline cell
+                `${datePart}\n${timePart}`,
                 r.seller,
                 r.cups.toString(),
                 `Rs. ${r.cost.toFixed(2)}`
@@ -415,16 +417,14 @@
             tableRows.push(rowData);
         });
 
-        // 5. Generate Table using autoTable plugin
         doc.autoTable({
             head: [tableColumn],
             body: tableRows,
             startY: 45,
             theme: 'grid',
-            headStyles: { fillColor: [44, 62, 80] }, // Dark blue header
+            headStyles: { fillColor: [44, 62, 80] },
             footStyles: { fillColor: [44, 62, 80] },
             didParseCell: function(data) {
-                // Ensure text is black
                 if (data.section === 'body') {
                     data.cell.styles.textColor = [0, 0, 0];
                 }
@@ -438,7 +438,6 @@
             }
         });
 
-        // 6. Add Signatures
         const finalY = doc.lastAutoTable.finalY + 20;
         doc.setFontSize(10);
         doc.setFont(undefined, 'normal');
@@ -446,13 +445,40 @@
         
         doc.line(20, finalY, 60, finalY);
         doc.text("Manager", 20, finalY + 5);
-
         doc.line(150, finalY, 190, finalY);
         doc.text("Seller", 150, finalY + 5);
 
-        // 7. Save
-        doc.save(fileName);
-        alert('✅ PDF Generated Successfully! Check your Downloads.');
+        // 2. Save as Blob
+        const pdfBlob = doc.output('blob');
+
+        // 3. Check if Web Share API is supported (Mobile)
+        if (navigator.share && navigator.canShare({ files: [new File([pdfBlob], fileName, { type: 'application/pdf' })] })) {
+            try {
+                await navigator.share({
+                    title: 'Tea Bill',
+                    text: `Tea Bill from ${officeName}`,
+                    files: [new File([pdfBlob], fileName, { type: 'application/pdf' })]
+                });
+            } catch (err) {
+                console.log('Share canceled or failed', err);
+                fallbackDownload(pdfBlob, fileName);
+            }
+        } else {
+            // 4. Fallback for Desktop or older browsers
+            fallbackDownload(pdfBlob, fileName);
+        }
+    }
+
+    function fallbackDownload(blob, fileName) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        alert('✅ PDF Generated! If it didn\'t download automatically, check your browser downloads.');
     }
 </script>
 </body>
