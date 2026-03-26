@@ -335,8 +335,9 @@ window.onload = function() {
   now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
   document.getElementById('entryDate').value = now.toISOString().slice(0,16);
 
-  /* Set date defaults */
-  var today = new Date().toISOString().split('T')[0];
+  /* Set date defaults — use local date, not UTC */
+  var _ld = new Date(); _ld.setMinutes(_ld.getMinutes() - _ld.getTimezoneOffset());
+  var today = _ld.toISOString().split('T')[0];
   document.getElementById('billFrom').value = today;
   document.getElementById('billTo').value   = today;
   document.getElementById('clrFrom').value  = today;
@@ -430,7 +431,8 @@ function nav(v) {
    STATS
 ════════════════════════════ */
 function updateStats() {
-  var today = new Date().toISOString().split('T')[0];
+  var _s = new Date(); _s.setMinutes(_s.getMinutes() - _s.getTimezoneOffset());
+  var today = _s.toISOString().split('T')[0];
   var t = 0;
   for (var i=0;i<app.records.length;i++) {
     var r = app.records[i];
