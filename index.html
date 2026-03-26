@@ -3,453 +3,951 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#2b5876">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Tea Tracker</title>
+
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
     <style>
-        body { background-color: #f0f2f5; padding-bottom: 100px; font-family: sans-serif; }
-        .card { border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 15px; }
-        .header-bg { background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%); color: white; padding: 25px; border-radius: 0 0 20px 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .nav-bottom { position: fixed; bottom: 0; width: 100%; background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 1000; display: flex; justify-content: space-around; padding: 10px 0; }
-        .nav-item { text-align: center; color: #666; font-size: 0.8rem; cursor: pointer; }
-        .nav-item.active { color: #4e4376; font-weight: bold; }
-        .nav-item i { font-size: 1.4rem; display: block; margin-bottom: 2px; }
-        
-        .powered-by {
-            position: fixed;
-            bottom: 60px;
-            width: 100%;
-            text-align: center;
+        /* ── BASE ── */
+        * { box-sizing: border-box; }
+        body {
+            background: #eef1f7;
+            font-family: 'Nunito', sans-serif;
+            padding-bottom: 120px;
+            min-height: 100vh;
+        }
+
+        /* ── HEADER ── */
+        .header-bg {
             background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
             color: white;
-            padding: 8px 0;
-            font-size: 0.75rem;
-            z-index: 999;
+            padding: 20px 20px 28px;
+            border-radius: 0 0 28px 28px;
+            margin-bottom: 20px;
+            box-shadow: 0 6px 20px rgba(78,67,118,0.35);
+            position: relative;
+            overflow: hidden;
         }
-        .powered-by strong { color: #ffd700; margin: 0 5px; }
-        .heart-icon { color: #ff4757; animation: heartbeat 1.5s infinite; margin-left: 5px; }
-        @keyframes heartbeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+        .header-bg::before {
+            content: '';
+            position: absolute;
+            top: -40px; right: -40px;
+            width: 160px; height: 160px;
+            background: rgba(255,255,255,0.07);
+            border-radius: 50%;
+        }
+        .header-bg::after {
+            content: '';
+            position: absolute;
+            bottom: -30px; left: -20px;
+            width: 120px; height: 120px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+        .header-bg h3 { font-weight: 800; font-size: 1.4rem; margin: 0; }
+        .header-bg p  { margin: 4px 0 0; font-size: 0.85rem; opacity: 0.85; }
 
-        .bill-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
-        .bill-table th, .bill-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        .bill-table th { background-color: #f8f9fa; font-weight: bold; }
+        /* ── CARDS ── */
+        .card {
+            border: none;
+            border-radius: 18px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            margin-bottom: 14px;
+            overflow: hidden;
+        }
+
+        /* ── SECTION TITLE ── */
+        .section-title {
+            font-weight: 800;
+            font-size: 1.05rem;
+            color: #2b5876;
+            margin-bottom: 14px;
+        }
+
+        /* ── FORM ── */
+        .form-label-sm {
+            font-size: 0.75rem;
+            color: #888;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 1.5px solid #e0e4ee;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.95rem;
+            padding: 10px 14px;
+            background: #fff;
+            transition: border-color 0.2s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #4e4376;
+            box-shadow: 0 0 0 3px rgba(78,67,118,0.12);
+        }
+
+        /* ── BUTTONS ── */
+        .btn {
+            border-radius: 12px;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            padding: 11px 18px;
+            transition: all 0.2s;
+        }
+        .btn-primary   { background: linear-gradient(135deg, #2b5876, #4e4376); border: none; }
+        .btn-primary:hover, .btn-primary:active { background: linear-gradient(135deg, #1e3f55, #3a3060); transform: translateY(-1px); }
+        .btn-success   { background: linear-gradient(135deg, #11998e, #38ef7d); border: none; color: #fff; }
+        .btn-dark      { background: #1e1e2e; border: none; }
+        .btn-outline-danger { border-radius: 12px; }
+        .btn-danger    { border-radius: 12px; }
+        .btn-pill      { border-radius: 50px !important; }
+
+        /* ── STATS CARD ── */
+        .stats-card {
+            background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
+            color: white;
+            border-radius: 18px;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .stats-card .label { font-size: 0.85rem; opacity: 0.85; }
+        .stats-card .amount { font-size: 1.4rem; font-weight: 800; }
+
+        /* ── HISTORY TABLE ── */
+        .table { font-size: 0.88rem; }
+        .table thead th { color: #888; font-size: 0.75rem; text-transform: uppercase; font-weight: 700; border: none; padding: 6px 12px; }
+        .table tbody td { padding: 10px 12px; border-color: #f0f0f0; vertical-align: middle; }
+        .table tbody tr:last-child td { border-bottom: none; }
+        .seller-badge {
+            background: rgba(78,67,118,0.1);
+            color: #4e4376;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        /* ── BILL PREVIEW TABLE ── */
+        .bill-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .bill-table th, .bill-table td { border: 1px solid #dee2e6; padding: 7px 10px; }
+        .bill-table thead th { background: #2b5876; color: white; font-weight: 700; }
+        .bill-table tfoot th { background: #f8f9fa; font-weight: 700; }
+        .bill-preview-wrap {
+            border: 1.5px solid #e0e4ee;
+            border-radius: 14px;
+            padding: 18px;
+            margin-top: 10px;
+            background: #fff;
+        }
+        .bill-preview-wrap h4 { font-size: 1rem; font-weight: 800; }
+
+        /* ── BOTTOM NAV ── */
+        .nav-bottom {
+            position: fixed;
+            bottom: 0; left: 0; width: 100%;
+            background: white;
+            box-shadow: 0 -2px 16px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0 6px;
+        }
+        .nav-item {
+            text-align: center;
+            color: #aaa;
+            font-size: 0.72rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 4px 16px;
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+        .nav-item.active { color: #4e4376; }
+        .nav-item i { font-size: 1.3rem; display: block; margin-bottom: 2px; }
+        .nav-item.active i {
+            background: linear-gradient(135deg, #2b5876, #4e4376);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ── POWERED BY ── */
+        .powered-by {
+            position: fixed;
+            bottom: 60px; width: 100%;
+            text-align: center;
+            background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
+            color: rgba(255,255,255,0.9);
+            padding: 5px 0;
+            font-size: 0.72rem;
+            font-weight: 600;
+            z-index: 999;
+            letter-spacing: 0.3px;
+        }
+        .powered-by strong { color: #ffd700; }
+        .heart-icon { color: #ff4757; display: inline-block; animation: heartbeat 1.4s infinite; }
+        @keyframes heartbeat { 0%,100% { transform: scale(1); } 50% { transform: scale(1.25); } }
+
+        /* ── DANGER ZONE ── */
+        .danger-zone {
+            border: 1.5px solid #dc3545;
+            background: #fff8f8;
+            padding: 18px;
+            border-radius: 14px;
+            margin-top: 18px;
+        }
+        .danger-zone h6 { font-weight: 800; }
+
+        /* ── TOAST ── */
+        .toast-popup {
+            position: fixed;
+            bottom: 80px; left: 50%;
+            transform: translateX(-50%);
+            background: #1e1e2e;
+            color: #fff;
+            padding: 11px 24px;
+            border-radius: 50px;
+            z-index: 9999;
+            font-size: 0.88rem;
+            font-weight: 600;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            animation: fadeInUp 0.25s ease;
+            white-space: nowrap;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* ── CONFIRM MODAL ── */
+        .modal-content { border-radius: 20px; border: none; }
+        .modal-header { border-bottom: none; padding-bottom: 0; }
+        .modal-footer { border-top: none; padding-top: 8px; }
+
+        /* ── MISC ── */
+        .list-group-item { border-color: #f0f0f0; font-size: 0.92rem; }
+        .text-rupee { font-family: 'Nunito', sans-serif; }
+        .date-small { font-size: 0.78rem; color: #888; }
+
+        /* ══════════════════════════════════════════
+           PRINT STYLES — "Save as PDF" via browser
+           ══════════════════════════════════════════ */
+        @media print {
+            /* Hide everything except the print bill */
+            body * { visibility: hidden !important; }
+            #print-bill, #print-bill * { visibility: visible !important; }
+            #print-bill {
+                position: fixed !important;
+                top: 0 !important; left: 0 !important;
+                width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 12mm 14mm;
+            }
+        }
     </style>
 </head>
 <body>
 
-<!-- Header -->
+<!-- ══════════ HEADER ══════════ -->
 <div class="header-bg text-center">
-    <h3><i class="fas fa-mug-hot"></i> <span id="appTitle">Tea Tracker</span></h3>
-    <p id="displayManagerName" style="font-size: 0.9rem; opacity: 0.9;">Manager: Loading...</p>
+    <h3><i class="fas fa-mug-hot me-2"></i><span id="appTitle">Tea Tracker</span></h3>
+    <p id="displayManagerName">Manager: Loading...</p>
 </div>
 
-<div class="container">
+<div class="container px-3">
 
-    <!-- VIEW 1: ADD ENTRY -->
+    <!-- ══════════ VIEW 1: ADD ══════════ -->
     <div id="view-add" class="view-section">
+        <!-- Stats -->
+        <div class="stats-card">
+            <div>
+                <div class="label">Today's Total</div>
+                <div class="amount" id="todaySpending">Rs. 0.00</div>
+            </div>
+            <i class="fas fa-chart-line fa-2x" style="opacity:0.4"></i>
+        </div>
+
         <div class="card p-4">
-            <h5 class="mb-3">New Purchase</h5>
+            <div class="section-title"><i class="fas fa-plus-circle me-2"></i>New Purchase</div>
             <form id="teaForm">
                 <div class="mb-3">
-                    <label class="form-label text-muted small">Date & Time</label>
+                    <label class="form-label-sm">Date & Time</label>
                     <input type="datetime-local" class="form-control" id="entryDate" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label text-muted small">Tea Seller</label>
+                    <label class="form-label-sm">Tea Seller</label>
                     <select class="form-select" id="entrySeller" required></select>
                 </div>
-                <div class="row">
-                    <div class="col-6 mb-3">
-                        <label class="form-label text-muted small">Cups</label>
-                        <input type="number" class="form-control" id="entryCups" min="1" required>
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="form-label-sm">Cups</label>
+                        <input type="number" class="form-control" id="entryCups" min="1" placeholder="0" required>
                     </div>
-                    <div class="col-6 mb-3">
-                        <label class="form-label text-muted small">Total Cost (Rs.)</label>
-                        <input type="number" class="form-control" id="entryCost" step="0.01" required>
+                    <div class="col-6">
+                        <label class="form-label-sm">Cost (Rs.)</label>
+                        <input type="number" class="form-control" id="entryCost" step="0.01" placeholder="0.00" required>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary w-100 py-2 rounded-pill">Save Entry</button>
+                <button type="submit" class="btn btn-primary w-100 btn-pill">
+                    <i class="fas fa-save me-2"></i>Save Entry
+                </button>
             </form>
-        </div>
-        <div class="card p-3 bg-white">
-            <div class="d-flex justify-content-between">
-                <span>Today's Total:</span>
-                <strong id="todaySpending" class="text-success">Rs. 0.00</strong>
-            </div>
         </div>
     </div>
 
-    <!-- VIEW 2: HISTORY -->
+    <!-- ══════════ VIEW 2: HISTORY ══════════ -->
     <div id="view-history" class="view-section d-none">
         <div class="card p-3">
-            <h5 class="mb-3">History</h5>
+            <div class="section-title px-1"><i class="fas fa-list me-2"></i>All Records</div>
             <div class="table-responsive">
-                <table class="table table-sm">
-                    <thead><tr><th>Date/Time</th><th>Seller</th><th>Cost</th></tr></thead>
-                    <tbody id="recordsTableBody"></tbody>
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date / Time</th>
+                            <th>Seller</th>
+                            <th class="text-end">Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordsTableBody">
+                        <tr><td colspan="3" class="text-center text-muted py-4">No records yet.</td></tr>
+                    </tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- VIEW 3: REPORTS -->
+    <!-- ══════════ VIEW 3: BILL / REPORT ══════════ -->
     <div id="view-report" class="view-section d-none">
         <div class="card p-4">
-            <h5>Generate Bill</h5>
-            <div class="mb-3">
-                <label class="form-label small">Select Date</label>
-                <input type="date" class="form-control" id="reportDate">
-            </div>
-            <div class="mb-3">
-                <label class="form-label small">Or Date Range</label>
-                <div class="row">
-                    <div class="col"><input type="date" class="form-control" id="reportStart"></div>
-                    <div class="col"><input type="date" class="form-control" id="reportEnd"></div>
+            <div class="section-title"><i class="fas fa-file-invoice me-2"></i>Generate Bill</div>
+            <label class="form-label-sm">Date Range</label>
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label class="form-label-sm">From</label>
+                    <input type="date" class="form-control" id="reportStart">
+                </div>
+                <div class="col-6">
+                    <label class="form-label-sm">To</label>
+                    <input type="date" class="form-control" id="reportEnd">
                 </div>
             </div>
-            <button class="btn btn-success w-100 mb-3" onclick="generateReport()">View Details</button>
+            <button class="btn btn-success w-100 btn-pill" onclick="generateReport()">
+                <i class="fas fa-eye me-2"></i>View Bill Details
+            </button>
         </div>
 
-        <div id="previewArea" class="card p-4 mt-3 d-none">
-            <h3 class="text-center" id="previewTitle">Tea Expense Report</h3>
-            <p class="text-center text-muted" id="previewManager"></p>
-            <p class="text-center" id="previewDateRange"></p>
-            
-            <table class="bill-table">
-                <thead>
-                    <tr>
-                        <th>Date & Time</th>
-                        <th>Seller</th>
-                        <th>Cups</th>
-                        <th>Cost</th>
-                    </tr>
-                </thead>
-                <tbody id="previewTableBody"></tbody>
-                <tfoot>
-                    <tr>
-                        <th colspan="3" class="text-end">Total:</th>
-                        <th id="previewTotal">Rs. 0.00</th>
-                    </tr>
-                </tfoot>
-            </table>
-            <div class="mt-4 d-flex justify-content-between">
-                <div class="text-center"><br>___________<br>Manager</div>
-                <div class="text-center"><br>___________<br>Seller</div>
+        <!-- Preview Area (hidden until report generated) -->
+        <div id="previewArea" class="d-none">
+            <div class="bill-preview-wrap">
+                <h4 class="text-center mb-0" id="previewTitle">Tea Expense Report</h4>
+                <p class="text-center text-muted small mb-1" id="previewManager"></p>
+                <p class="text-center small fw-bold mb-3" id="previewDateRange"></p>
+
+                <div class="table-responsive">
+                    <table class="bill-table">
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Seller</th>
+                                <th>Cups</th>
+                                <th>Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody id="previewTableBody"></tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="3" class="text-end">Grand Total</th>
+                                <th id="previewTotal">Rs. 0.00</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4 px-2">
+                    <div class="text-center">
+                        <div style="border-top:1.5px solid #333;width:100px;margin-bottom:4px;"></div>
+                        <small class="text-muted">Manager Signature</small>
+                    </div>
+                    <div class="text-center">
+                        <div style="border-top:1.5px solid #333;width:100px;margin-bottom:4px;"></div>
+                        <small class="text-muted">Seller Signature</small>
+                    </div>
+                </div>
             </div>
+
+            <!-- Download Button -->
+            <button id="printBtn" class="btn btn-dark w-100 btn-pill mt-3" onclick="printBill()">
+                <i class="fas fa-file-pdf me-2"></i>Open Bill &amp; Save as PDF
+            </button>
+            <p class="text-center text-muted mt-2" style="font-size:0.75rem;">
+                <i class="fas fa-info-circle me-1"></i>Opens bill in browser → tap <strong>Save as PDF</strong>.
+            </p>
         </div>
-        
-        <!-- Updated Button -->
-        <button id="downloadBtn" class="btn btn-dark w-100 mt-3 d-none" onclick="openPDFInNewTab()">
-            <i class="fas fa-file-pdf"></i> Open / Download PDF
-        </button>
-        <p class="text-center text-muted small mt-2">
-            <i class="fas fa-info-circle"></i> The PDF will open in a new tab. Tap the <b>Download Icon</b> there to save.
-        </p>
     </div>
 
-    <!-- VIEW 4: SETTINGS -->
+    <!-- ══════════ VIEW 4: SETTINGS ══════════ -->
     <div id="view-settings" class="view-section d-none">
         <div class="card p-4">
-            <h5>Settings</h5>
+            <div class="section-title"><i class="fas fa-cog me-2"></i>Settings</div>
+
             <div class="mb-3">
-                <label>Office/Company Name</label>
-                <input type="text" class="form-control" id="officeNameInput" placeholder="e.g., ABC Company">
+                <label class="form-label-sm">Office / Company Name</label>
+                <input type="text" class="form-control" id="officeNameInput" placeholder="e.g. ABC Office">
             </div>
             <div class="mb-3">
-                <label>Manager Name</label>
-                <input type="text" class="form-control" id="managerNameInput">
+                <label class="form-label-sm">Manager Name</label>
+                <input type="text" class="form-control" id="managerNameInput" placeholder="e.g. Rajesh Kumar">
             </div>
-            <hr>
-            <h6>Add Seller</h6>
+
+            <hr style="border-color:#eee;">
+            <div class="section-title" style="font-size:0.9rem;">
+                <i class="fas fa-users me-2"></i>Tea Sellers
+            </div>
+
             <div class="input-group mb-3">
-                <input type="text" class="form-control" id="newSellerName">
-                <button class="btn btn-outline-primary" onclick="addSeller()">Add</button>
+                <input type="text" class="form-control" id="newSellerName" placeholder="Add seller name">
+                <button class="btn btn-outline-primary" onclick="addSeller()">
+                    <i class="fas fa-plus"></i>
+                </button>
             </div>
             <ul class="list-group mb-3" id="sellersList"></ul>
-            <button class="btn btn-primary w-100" onclick="saveSettings()">Save Changes</button>
+
+            <button class="btn btn-primary w-100 btn-pill" onclick="saveSettings()">
+                <i class="fas fa-check me-2"></i>Save Settings
+            </button>
+
+            <!-- DANGER ZONE -->
+            <div class="danger-zone">
+                <h6 class="text-danger mb-1">
+                    <i class="fas fa-trash-alt me-2"></i>Clear Records
+                </h6>
+                <p class="text-muted small mb-3">
+                    After a bill is paid, use this to remove settled records. <strong>Cannot be undone.</strong>
+                </p>
+
+                <label class="form-label-sm">Clear Paid Period</label>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label-sm">From</label>
+                        <input type="date" class="form-control form-control-sm" id="clearStart">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label-sm">To</label>
+                        <input type="date" class="form-control form-control-sm" id="clearEnd">
+                    </div>
+                </div>
+                <button class="btn btn-outline-danger w-100 btn-pill mb-3" onclick="confirmClearRange()">
+                    <i class="fas fa-calendar-times me-2"></i>Clear Selected Period
+                </button>
+
+                <hr style="border-color:#f5c6cb;">
+
+                <button class="btn btn-danger w-100 btn-pill" onclick="confirmClearAll()">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Clear ALL Records
+                </button>
+            </div>
         </div>
     </div>
 
+</div><!-- /container -->
+
+
+<!-- ══════════ PRINT-ONLY BILL (hidden on screen) ══════════ -->
+<div id="print-bill" style="display:none; font-family:Arial,sans-serif; font-size:12px; color:#111;">
+    <!-- filled dynamically by printBill() -->
 </div>
 
-<!-- Bottom Navigation -->
-<div class="nav-bottom no-print">
-    <div class="nav-item active" onclick="switchView('add', this)"><i class="fas fa-plus-circle"></i> Add</div>
-    <div class="nav-item" onclick="switchView('history', this)"><i class="fas fa-list"></i> History</div>
-    <div class="nav-item" onclick="switchView('report', this)"><i class="fas fa-file-invoice"></i> Bill</div>
-    <div class="nav-item" onclick="switchView('settings', this)"><i class="fas fa-cog"></i> Settings</div>
+<!-- ══════════ CONFIRM MODAL ══════════ -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered mx-3">
+        <div class="modal-content">
+            <div class="modal-header pb-0">
+                <h5 class="modal-title text-danger">
+                    <i class="fas fa-trash-alt me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmModalMsg" class="mb-2"></p>
+                <p class="text-danger small fw-bold mb-0">
+                    <i class="fas fa-exclamation-circle me-1"></i>This action cannot be undone.
+                </p>
+            </div>
+            <div class="modal-footer pt-0">
+                <button class="btn btn-secondary btn-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-danger btn-pill px-4" id="confirmModalBtn">Yes, Delete</button>
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- Powered By Footer -->
-<div class="powered-by no-print">
-    <span>Powered by</span> <strong>Piyuneel</strong> <i class="fas fa-heart heart-icon"></i>
+<!-- ══════════ BOTTOM NAV ══════════ -->
+<div class="nav-bottom">
+    <div class="nav-item active" onclick="switchView('add', this)">
+        <i class="fas fa-plus-circle"></i>Add
+    </div>
+    <div class="nav-item" onclick="switchView('history', this)">
+        <i class="fas fa-list-ul"></i>History
+    </div>
+    <div class="nav-item" onclick="switchView('report', this)">
+        <i class="fas fa-file-invoice"></i>Bill
+    </div>
+    <div class="nav-item" onclick="switchView('settings', this)">
+        <i class="fas fa-cog"></i>Settings
+    </div>
 </div>
 
-<!-- Scripts -->
+<!-- ══════════ POWERED BY ══════════ -->
+<div class="powered-by">
+    Powered by <strong>Piyuneel</strong>&nbsp;<span class="heart-icon">❤</span>
+</div>
+
+<!-- ══════════ SCRIPTS ══════════ -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
 
 <script>
-    let appData = {
-        officeName: "Tea Tracker",
-        manager: "Office Manager",
-        sellers: ["Canteen", "Street Vendor"],
-        records: []
-    };
+/* ════════════════════════════════════════════════════
+   APP STATE
+   ════════════════════════════════════════════════════ */
+let appData = {
+    officeName : "Tea Tracker",
+    manager    : "Office Manager",
+    sellers    : ["Canteen", "Street Vendor"],
+    records    : []
+};
 
-    let currentReportData = [];
-    let currentReportTotal = 0;
-    let currentReportRange = "";
+// These three are set by generateReport() and consumed by downloadPDF()
+let currentReportData  = [];
+let currentReportTotal = 0;
+let currentReportRange = "";
 
-    window.onload = function() {
-        loadData();
-        const now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        document.getElementById('entryDate').value = now.toISOString().slice(0,16);
-        const todayStr = new Date().toISOString().split('T')[0];
-        document.getElementById('reportDate').value = todayStr;
-        document.getElementById('reportStart').value = todayStr;
-        document.getElementById('reportEnd').value = todayStr;
-        updateStats();
-    };
+let pendingClearAction = null; // For the confirm modal
 
-    function loadData() {
-        const stored = localStorage.getItem('teaAppData_v8');
-        if (stored) appData = JSON.parse(stored);
-        
-        document.getElementById('appTitle').innerText = appData.officeName;
-        document.getElementById('displayManagerName').innerText = "Manager: " + appData.manager;
-        document.getElementById('officeNameInput').value = appData.officeName;
-        document.getElementById('managerNameInput').value = appData.manager;
-        document.getElementById('previewManager').innerText = appData.manager;
-        document.getElementById('previewTitle').innerText = appData.officeName + " - Tea Expense Report";
-        
-        renderDropdowns();
-        renderSettingsList();
-        loadHistory();
-    }
+/* ════════════════════════════════════════════════════
+   INIT
+   ════════════════════════════════════════════════════ */
+window.onload = function () {
+    loadData();
 
-    function saveData() {
-        localStorage.setItem('teaAppData_v8', JSON.stringify(appData));
-        updateStats();
-    }
+    // Default datetime-local to now
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('entryDate').value = now.toISOString().slice(0, 16);
 
-    function switchView(viewName, navElement) {
-        document.querySelectorAll('.view-section').forEach(el => el.classList.add('d-none'));
-        document.getElementById('view-' + viewName).classList.remove('d-none');
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        if(navElement) navElement.classList.add('active');
-        if(viewName === 'history') loadHistory();
-    }
+    // Default date pickers to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('reportStart').value = today;
+    document.getElementById('reportEnd').value   = today;
+    document.getElementById('clearStart').value  = today;
+    document.getElementById('clearEnd').value    = today;
 
-    document.getElementById('teaForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const newRecord = {
-            id: Date.now(),
-            datetime: document.getElementById('entryDate').value,
-            seller: document.getElementById('entrySeller').value,
-            cups: parseInt(document.getElementById('entryCups').value),
-            cost: parseFloat(document.getElementById('entryCost').value)
-        };
-        appData.records.push(newRecord);
-        appData.records.sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
-        saveData();
-        alert("Saved!");
-        this.reset();
-        const now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        document.getElementById('entryDate').value = now.toISOString().slice(0,16);
-    });
-
-    function updateStats() {
-        const today = new Date().toISOString().split('T')[0];
-        let total = 0;
-        appData.records.forEach(r => { if (r.datetime.startsWith(today)) total += r.cost; });
-        document.getElementById('todaySpending').innerText = "Rs. " + total.toFixed(2);
-    }
-
-    function loadHistory() {
-        const tbody = document.getElementById('recordsTableBody');
-        tbody.innerHTML = '';
-        appData.records.forEach(r => {
-            const dt = new Date(r.datetime);
-            const dateStr = dt.toLocaleDateString() + ' ' + dt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td><small>${dateStr}</small></td><td>${r.seller}</td><td class="text-end">Rs. ${r.cost.toFixed(2)}</td>`;
-            tbody.appendChild(tr);
-        });
-    }
-
-    function renderDropdowns() {
-        const sel = document.getElementById('entrySeller');
-        sel.innerHTML = '';
-        appData.sellers.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s; opt.innerText = s;
-            sel.appendChild(opt);
-        });
-    }
-
-    function renderSettingsList() {
-        const list = document.getElementById('sellersList');
-        list.innerHTML = '';
-        appData.sellers.forEach((s, i) => {
-            const li = document.createElement('li');
-            li.className = "list-group-item d-flex justify-content-between";
-            li.innerHTML = `${s} <button class="btn btn-sm btn-danger" onclick="removeSeller(${i})">X</button>`;
-            list.appendChild(li);
-        });
-    }
-
-    function addSeller() {
-        const val = document.getElementById('newSellerName').value;
-        if(val) { appData.sellers.push(val); renderSettingsList(); renderDropdowns(); }
-    }
-    function removeSeller(i) { appData.sellers.splice(i, 1); renderSettingsList(); renderDropdowns(); }
-    
-    function saveSettings() {
-        appData.officeName = document.getElementById('officeNameInput').value || "Tea Tracker";
-        appData.manager = document.getElementById('managerNameInput').value;
-        saveData();
-        document.getElementById('appTitle').innerText = appData.officeName;
-        document.getElementById('displayManagerName').innerText = "Manager: " + appData.manager;
-        document.getElementById('previewTitle').innerText = appData.officeName + " - Tea Expense Report";
-        document.getElementById('previewManager').innerText = appData.manager;
-        alert("Settings Saved");
-        switchView('add', document.querySelector('.nav-item'));
-    }
-
-    function generateReport() {
-        const singleDate = document.getElementById('reportDate').value;
-        const start = document.getElementById('reportStart').value;
-        const end = document.getElementById('reportEnd').value;
-        
-        let filtered = appData.records.filter(r => {
-            const rDate = r.datetime.split('T')[0];
-            if(singleDate) return rDate === singleDate;
-            return rDate >= start && rDate <= end;
-        });
-
-        filtered.sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
-
-        currentReportData = filtered;
-        currentReportTotal = 0;
-        const tbody = document.getElementById('previewTableBody');
-        tbody.innerHTML = '';
-
-        if (filtered.length === 0) {
-            alert("No records found for this date range.");
-            document.getElementById('previewArea').classList.add('d-none');
-            document.getElementById('downloadBtn').classList.add('d-none');
-            return;
+    // Wire confirm modal button
+    document.getElementById('confirmModalBtn').addEventListener('click', function () {
+        if (pendingClearAction) {
+            pendingClearAction();
+            pendingClearAction = null;
         }
+    });
+};
 
-        filtered.forEach(r => {
-            currentReportTotal += r.cost;
-            const dt = new Date(r.datetime);
-            const datePart = r.datetime.split('T')[0];
-            const timePart = dt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${datePart}<br><small style="color:#666">${timePart}</small></td>
+/* ════════════════════════════════════════════════════
+   DATA — LOAD / SAVE
+   ════════════════════════════════════════════════════ */
+function loadData() {
+    const stored = localStorage.getItem('teaAppData_v3');
+    if (stored) {
+        try { appData = JSON.parse(stored); } catch (e) { /* corrupted, use defaults */ }
+    }
+    // Sync UI
+    document.getElementById('appTitle').innerText          = appData.officeName;
+    document.getElementById('displayManagerName').innerText = "Manager: " + appData.manager;
+    document.getElementById('officeNameInput').value       = appData.officeName;
+    document.getElementById('managerNameInput').value      = appData.manager;
+    document.getElementById('previewManager').innerText    = appData.manager;
+    document.getElementById('previewTitle').innerText      = appData.officeName + " — Tea Expense Report";
+
+    renderDropdowns();
+    renderSettingsList();
+    loadHistory();
+    updateStats();
+}
+
+function saveData() {
+    localStorage.setItem('teaAppData_v3', JSON.stringify(appData));
+    updateStats();
+}
+
+/* ════════════════════════════════════════════════════
+   NAVIGATION
+   ════════════════════════════════════════════════════ */
+function switchView(viewName, navEl) {
+    document.querySelectorAll('.view-section').forEach(el => el.classList.add('d-none'));
+    document.getElementById('view-' + viewName).classList.remove('d-none');
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    if (navEl) navEl.classList.add('active');
+    if (viewName === 'history') loadHistory();
+}
+
+/* ════════════════════════════════════════════════════
+   ADD ENTRY
+   ════════════════════════════════════════════════════ */
+document.getElementById('teaForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const record = {
+        id      : Date.now(),
+        datetime: document.getElementById('entryDate').value,
+        seller  : document.getElementById('entrySeller').value,
+        cups    : parseInt(document.getElementById('entryCups').value),
+        cost    : parseFloat(document.getElementById('entryCost').value)
+    };
+    appData.records.push(record);
+    appData.records.sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+    saveData();
+    showToast("✅ Entry saved!");
+    this.reset();
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('entryDate').value = now.toISOString().slice(0, 16);
+});
+
+function updateStats() {
+    const today = new Date().toISOString().split('T')[0];
+    let total = 0;
+    appData.records.forEach(r => { if (r.datetime.startsWith(today)) total += r.cost; });
+    document.getElementById('todaySpending').innerText = "Rs. " + total.toFixed(2);
+}
+
+/* ════════════════════════════════════════════════════
+   HISTORY
+   ════════════════════════════════════════════════════ */
+function loadHistory() {
+    const tb = document.getElementById('recordsTableBody');
+    if (appData.records.length === 0) {
+        tb.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-4"><i class="fas fa-inbox fa-2x d-block mb-2" style="opacity:0.3"></i>No records yet.</td></tr>';
+        return;
+    }
+    tb.innerHTML = '';
+    appData.records.forEach(r => {
+        const d = new Date(r.datetime);
+        const dateStr = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+        const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        tb.innerHTML += `
+            <tr>
+                <td>
+                    <div style="font-weight:600">${dateStr}</div>
+                    <div class="date-small">${timeStr}</div>
+                </td>
+                <td><span class="seller-badge">${r.seller}</span></td>
+                <td class="text-end fw-700" style="font-weight:700">Rs.${r.cost.toFixed(2)}</td>
+            </tr>`;
+    });
+}
+
+/* ════════════════════════════════════════════════════
+   SELLERS
+   ════════════════════════════════════════════════════ */
+function renderDropdowns() {
+    const sel = document.getElementById('entrySeller');
+    sel.innerHTML = '';
+    appData.sellers.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s; opt.text = s;
+        sel.appendChild(opt);
+    });
+}
+
+function renderSettingsList() {
+    const ul = document.getElementById('sellersList');
+    ul.innerHTML = '';
+    if (appData.sellers.length === 0) {
+        ul.innerHTML = '<li class="list-group-item text-muted text-center small">No sellers added yet.</li>';
+        return;
+    }
+    appData.sellers.forEach((s, i) => {
+        ul.innerHTML += `
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-store me-2" style="color:#4e4376;opacity:0.6"></i>${s}</span>
+                <button class="btn btn-sm btn-outline-danger btn-pill px-3" onclick="removeSeller(${i})">
+                    <i class="fas fa-times"></i>
+                </button>
+            </li>`;
+    });
+}
+
+function addSeller() {
+    const v = document.getElementById('newSellerName').value.trim();
+    if (!v) return;
+    if (appData.sellers.includes(v)) { showToast("⚠️ Seller already exists!"); return; }
+    appData.sellers.push(v);
+    document.getElementById('newSellerName').value = '';
+    renderDropdowns();
+    renderSettingsList();
+    showToast("✅ Seller added!");
+}
+
+function removeSeller(i) {
+    appData.sellers.splice(i, 1);
+    renderDropdowns();
+    renderSettingsList();
+}
+
+function saveSettings() {
+    appData.officeName = document.getElementById('officeNameInput').value.trim() || "Tea Tracker";
+    appData.manager    = document.getElementById('managerNameInput').value.trim() || "Office Manager";
+    saveData();
+    // Re-sync header and bill preview labels
+    document.getElementById('appTitle').innerText          = appData.officeName;
+    document.getElementById('displayManagerName').innerText = "Manager: " + appData.manager;
+    document.getElementById('previewTitle').innerText      = appData.officeName + " — Tea Expense Report";
+    document.getElementById('previewManager').innerText    = appData.manager;
+    showToast("✅ Settings saved!");
+    switchView('add', document.querySelector('.nav-item'));
+}
+
+/* ════════════════════════════════════════════════════
+   REPORT — VIEW DETAILS
+   ════════════════════════════════════════════════════ */
+function generateReport() {
+    const start = document.getElementById('reportStart').value;
+    const end   = document.getElementById('reportEnd').value;
+    if (!start || !end) { showToast("⚠️ Please select a date range."); return; }
+    if (start > end)    { showToast("⚠️ Start date must be before end date."); return; }
+
+    // Filter + sort ascending for the bill display
+    currentReportData = appData.records
+        .filter(r => { const d = r.datetime.split('T')[0]; return d >= start && d <= end; })
+        .sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
+
+    if (currentReportData.length === 0) {
+        showToast("⚠️ No records found for this range.");
+        document.getElementById('previewArea').classList.add('d-none');
+        return;
+    }
+
+    // Build preview table
+    currentReportTotal = 0;
+    const tb = document.getElementById('previewTableBody');
+    tb.innerHTML = '';
+
+    currentReportData.forEach(r => {
+        currentReportTotal += r.cost;
+        const d = new Date(r.datetime);
+        tb.innerHTML += `
+            <tr>
+                <td>${r.datetime.split('T')[0]}<br><small style="color:#888">${d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</small></td>
                 <td>${r.seller}</td>
                 <td>${r.cups}</td>
-                <td>Rs. ${r.cost.toFixed(2)}</td>
-            `;
-            tbody.appendChild(tr);
-        });
+                <td>Rs.${r.cost.toFixed(2)}</td>
+            </tr>`;
+    });
 
-        currentReportRange = singleDate ? `Date: ${singleDate}` : `From: ${start} To: ${end}`;
-        document.getElementById('previewDateRange').innerText = currentReportRange;
-        document.getElementById('previewTotal').innerText = "Rs. " + currentReportTotal.toFixed(2);
-        
-        document.getElementById('previewArea').classList.remove('d-none');
-        document.getElementById('downloadBtn').classList.remove('d-none');
-        document.getElementById('previewArea').scrollIntoView({ behavior: 'smooth' });
+    currentReportRange = `${start}  to  ${end}`;
+    document.getElementById('previewDateRange').innerText = `Period: ${currentReportRange}`;
+    document.getElementById('previewTotal').innerText     = "Rs. " + currentReportTotal.toFixed(2);
+
+    document.getElementById('previewArea').classList.remove('d-none');
+    document.getElementById('previewArea').scrollIntoView({ behavior: 'smooth' });
+}
+
+/* ════════════════════════════════════════════════════
+   PRINT / SAVE AS PDF
+   ════════════════════════════════════════════════════
+   Uses window.print() — the browser's native print system.
+   On Android: Print dialog → "Save as PDF" in the printer list.
+   Works in ALL browsers and WebView APKs without any library.
+   ════════════════════════════════════════════════════ */
+function printBill() {
+    if (!currentReportData || currentReportData.length === 0) {
+        showToast("⚠️ Please tap 'View Bill Details' first.");
+        return;
     }
 
-    // ✅ FIXED: Mobile-compatible PDF download using base64 data URI + hidden anchor
-    function openPDFInNewTab() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
+    // ── Build table rows ──
+    let rowsHtml = '';
+    for (let i = 0; i < currentReportData.length; i++) {
+        const r = currentReportData[i];
+        const d = new Date(r.datetime);
+        const bg = i % 2 === 0 ? '#ffffff' : '#f5f7ff';
+        rowsHtml += '<tr style="background:' + bg + '">'
+            + '<td style="padding:8px 10px;border:1px solid #ddd;">' + r.datetime.split('T')[0]
+            + '<br><span style="font-size:10px;color:#888">' + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) + '</span></td>'
+            + '<td style="padding:8px 10px;border:1px solid #ddd;">' + r.seller + '</td>'
+            + '<td style="padding:8px 10px;border:1px solid #ddd;text-align:center;">' + r.cups + '</td>'
+            + '<td style="padding:8px 10px;border:1px solid #ddd;text-align:right;font-weight:600;">Rs. ' + parseFloat(r.cost).toFixed(2) + '</td>'
+            + '</tr>';
+    }
 
-        const officeName = appData.officeName;
-        const managerName = appData.manager;
-        const fileName = `${officeName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_tea_bill_${new Date().toISOString().split('T')[0]}.pdf`;
+    // ── Build a COMPLETE standalone HTML page ──
+    // Opening this page in a new window works in WebView APKs because
+    // window.open() is handled by the SYSTEM BROWSER (Chrome), not the WebView.
+    // Chrome's print dialog has "Save as PDF" built-in — no library needed.
+    const billPage = '<!DOCTYPE html><html><head>'
+        + '<meta charset="UTF-8">'
+        + '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        + '<title>Tea Bill — ' + appData.officeName + '</title>'
+        + '<style>'
+        + 'body{margin:0;padding:0;font-family:Arial,sans-serif;background:#f0f2f5;}'
+        + '.page{max-width:720px;margin:0 auto;background:#fff;box-shadow:0 0 20px rgba(0,0,0,0.12);}'
+        + '.header{background:linear-gradient(135deg,#2b5876,#4e4376);color:#fff;padding:22px 28px;text-align:center;}'
+        + '.header h1{margin:0;font-size:22px;font-weight:900;}'
+        + '.header p{margin:5px 0 0;font-size:13px;opacity:0.88;}'
+        + '.meta{display:flex;justify-content:space-between;background:#f4f6fb;padding:12px 24px;border-bottom:1px solid #dde2ee;font-size:12px;}'
+        + '.meta strong{display:block;font-size:14px;margin-top:2px;}'
+        + '.meta span{font-size:10px;text-transform:uppercase;color:#888;letter-spacing:.5px;}'
+        + 'table{width:100%;border-collapse:collapse;font-size:12px;}'
+        + 'thead tr{background:#2b5876;color:#fff;}'
+        + 'th{padding:10px 10px;text-align:left;border:1px solid #1e4060;}'
+        + 'th:last-child,td:last-child{text-align:right;}'
+        + 'th:nth-child(3),td:nth-child(3){text-align:center;}'
+        + '.total-row td{background:#2b5876;color:#fff;font-weight:900;font-size:13px;padding:10px;border:1px solid #1e4060;}'
+        + '.total-row td:first-child{text-align:right;font-size:12px;font-weight:700;}'
+        + '.sigs{display:flex;justify-content:space-around;padding:40px 20px 20px;}'
+        + '.sig-box{text-align:center;}'
+        + '.sig-line{width:150px;border-top:1.5px solid #444;margin:0 auto 6px;}'
+        + '.sig-label{font-size:11px;color:#555;}'
+        + '.footer{text-align:center;padding:16px;font-size:10px;color:#bbb;border-top:1px solid #eee;}'
+        + '.table-wrap{padding:16px 16px 0;}'
+        + '.save-btn{display:block;margin:20px auto;padding:14px 40px;background:linear-gradient(135deg,#2b5876,#4e4376);'
+        + 'color:#fff;border:none;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;'
+        + 'box-shadow:0 4px 14px rgba(78,67,118,0.4);letter-spacing:0.3px;}'
+        + '.save-btn:active{transform:scale(0.97);}'
+        + '.instructions{text-align:center;font-size:11px;color:#888;margin:0 0 20px;padding:0 16px;line-height:1.6;}'
+        + '@media print{'
+        + '.save-btn,.instructions{display:none!important;}'
+        + 'body{background:#fff;}'
+        + '.page{box-shadow:none;}'
+        + '@page{size:A4 portrait;margin:10mm 12mm;}'
+        + '}'
+        + '</style>'
+        + '</head><body>'
+        + '<div class="page">'
+        + '<div class="header">'
+        + '<h1>&#9749; ' + appData.officeName + '</h1>'
+        + '<p>Tea Expense Report</p>'
+        + '</div>'
+        + '<div class="meta">'
+        + '<div><span>Manager</span><strong>' + appData.manager + '</strong></div>'
+        + '<div style="text-align:right"><span>Period</span><strong>' + currentReportRange + '</strong></div>'
+        + '</div>'
+        + '<div class="table-wrap">'
+        + '<table><thead><tr>'
+        + '<th>Date &amp; Time</th><th>Seller</th><th>Cups</th><th>Cost</th>'
+        + '</tr></thead>'
+        + '<tbody>' + rowsHtml + '</tbody>'
+        + '<tr class="total-row"><td colspan="3">Grand Total</td><td>Rs. ' + currentReportTotal.toFixed(2) + '</td></tr>'
+        + '</table>'
+        + '</div>'
+        + '<div class="sigs">'
+        + '<div class="sig-box"><div class="sig-line"></div><div class="sig-label">Manager Signature</div></div>'
+        + '<div class="sig-box"><div class="sig-line"></div><div class="sig-label">Seller Signature</div></div>'
+        + '</div>'
+        + '<div class="footer">Generated by Tea Tracker &nbsp;|&nbsp; Powered by Piyuneel &#10084;</div>'
+        + '<button class="save-btn" onclick="window.print()">&#128438; Save as PDF / Print</button>'
+        + '<p class="instructions">Tap the button above &rarr; select <strong>Save as PDF</strong> from the printer list.<br>Or use your browser menu &rarr; Print / Share.</p>'
+        + '</div>'
+        + '<script>window.onload=function(){setTimeout(function(){window.print();},800);};<\/script>'
+        + '</body></html>';
 
-        // Build PDF content
-        doc.setFontSize(18);
-        doc.setTextColor(40);
-        doc.text(`${officeName} - Tea Expense Report`, 105, 20, null, null, "center");
-
-        doc.setFontSize(12);
-        doc.setTextColor(100);
-        doc.text(`Manager: ${managerName}`, 105, 30, null, null, "center");
-        doc.text(currentReportRange, 105, 38, null, null, "center");
-
-        const tableColumn = ["Date & Time", "Seller", "Cups", "Cost"];
-        const tableRows = [];
-
-        currentReportData.forEach(r => {
-            const dt = new Date(r.datetime);
-            const datePart = r.datetime.split('T')[0];
-            const timePart = dt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            tableRows.push([
-                `${datePart}\n${timePart}`,
-                r.seller,
-                r.cups.toString(),
-                `Rs. ${r.cost.toFixed(2)}`
-            ]);
-        });
-
-        doc.autoTable({
-            head: [tableColumn],
-            body: tableRows,
-            startY: 45,
-            theme: 'grid',
-            headStyles: { fillColor: [44, 62, 80] },
-            footStyles: { fillColor: [44, 62, 80] },
-            didParseCell: function(data) {
-                if (data.section === 'body') {
-                    data.cell.styles.textColor = [0, 0, 0];
-                }
-            },
-            footer: function(data) {
-                if (data.pageNumber === data.pageCount) {
-                    doc.setFontSize(12);
-                    doc.setFont(undefined, 'bold');
-                    doc.text(`Total: Rs. ${currentReportTotal.toFixed(2)}`, 190, data.cursor.y + 10, null, null, "right");
-                }
-            }
-        });
-
-        const finalY = doc.lastAutoTable.finalY + 20;
-        doc.setFontSize(10);
-        doc.setFont(undefined, 'normal');
-        doc.setTextColor(0, 0, 0);
-        doc.line(20, finalY, 60, finalY);
-        doc.text("Manager", 20, finalY + 5);
-        doc.line(150, finalY, 190, finalY);
-        doc.text("Seller", 150, finalY + 5);
-
-        // ✅ Use base64 data URI + hidden <a> tag — works on Android WebView & mobile browsers
+    // ── Open the page ──
+    // Try window.open with document.write first (works in most WebViews + browsers)
+    const newWin = window.open('', '_blank');
+    if (newWin) {
+        newWin.document.open();
+        newWin.document.write(billPage);
+        newWin.document.close();
+    } else {
+        // Fallback: open as blob URL (if popup blocked)
         try {
-            const pdfDataUri = doc.output('datauristring');
-            const link = document.createElement('a');
-            link.href = pdfDataUri;
-            link.download = fileName;
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            const blob = new Blob([billPage], { type: 'text/html' });
+            const url  = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            setTimeout(() => URL.revokeObjectURL(url), 15000);
         } catch (e) {
-            // Fallback: use jsPDF's built-in save (works on most browsers)
-            doc.save(fileName);
+            showToast("⚠️ Popup blocked. Please allow popups for this app.");
         }
     }
+}
+
+
+/* ════════════════════════════════════════════════════
+   CLEAR DATA
+   ════════════════════════════════════════════════════ */
+function confirmClearRange() {
+    const start = document.getElementById('clearStart').value;
+    const end   = document.getElementById('clearEnd').value;
+    if (!start || !end)  { showToast("⚠️ Please select From and To dates."); return; }
+    if (start > end)     { showToast("⚠️ 'From' must be before 'To'."); return; }
+
+    const hits = appData.records.filter(r => {
+        const d = r.datetime.split('T')[0];
+        return d >= start && d <= end;
+    });
+    if (hits.length === 0) { showToast("⚠️ No records in that range."); return; }
+
+    document.getElementById('confirmModalMsg').innerHTML =
+        `Delete <strong>${hits.length} record(s)</strong> from <strong>${start}</strong> to <strong>${end}</strong>?`;
+
+    pendingClearAction = () => {
+        appData.records = appData.records.filter(r => {
+            const d = r.datetime.split('T')[0];
+            return !(d >= start && d <= end);
+        });
+        saveData();
+        loadHistory();
+        bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+        showToast(`✅ ${hits.length} record(s) deleted.`);
+    };
+    new bootstrap.Modal(document.getElementById('confirmModal')).show();
+}
+
+function confirmClearAll() {
+    if (appData.records.length === 0) { showToast("⚠️ No records to delete."); return; }
+
+    document.getElementById('confirmModalMsg').innerHTML =
+        `Delete <strong>all ${appData.records.length} record(s)</strong>? The entire history will be wiped.`;
+
+    pendingClearAction = () => {
+        const count = appData.records.length;
+        appData.records = [];
+        saveData();
+        loadHistory();
+        bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+        showToast(`✅ All ${count} record(s) deleted.`);
+    };
+    new bootstrap.Modal(document.getElementById('confirmModal')).show();
+}
+
+/* ════════════════════════════════════════════════════
+   TOAST NOTIFICATION
+   ════════════════════════════════════════════════════ */
+function showToast(msg) {
+    // Remove any existing toast first
+    document.querySelectorAll('.toast-popup').forEach(t => t.remove());
+    const t = document.createElement('div');
+    t.className  = 'toast-popup';
+    t.innerText  = msg;
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.4s'; }, 2600);
+    setTimeout(() => t.remove(), 3000);
+}
 </script>
 </body>
 </html>
