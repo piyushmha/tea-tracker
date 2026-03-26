@@ -1,0 +1,57 @@
+/* ════════════════════════════
+   DOWNLOAD PDF - Opens separate page
+════════════════════════════ */
+function downloadPDF() {
+  if (!rptData || rptData.length === 0) { 
+    toast('⚠️ View bill details first'); 
+    return; 
+  }
+  
+  // Prepare bill data package
+  const billPackage = {
+    records: rptData.map(r => ({
+      datetime: r.datetime,
+      seller: r.seller,
+      cups: r.cups,
+      cost: r.cost
+    })),
+    total: rptTotal,
+    range: rptRange,
+    officeName: app.officeName,
+    manager: app.manager
+  };
+  
+  // Try Method 1: Pass via URL (works for small datasets)
+  try {
+    const jsonStr = JSON.stringify(billPackage);
+    const encoded = encodeURIComponent(jsonStr);
+    // URL length limit ~2000 chars - if too long, fallback to localStorage
+    if (encoded.length < 1800) {
+      window.open('pdf-download.html?data=' + encoded, '_blank', 'width=400,height=600');
+      toast('📄 Opening PDF generator...');
+      return;
+    }
+  } catch(e) {
+    console.warn('URL encoding failed, using localStorage fallback');
+  }
+  
+  // Fallback Method 2: Use localStorage (for larger datasets)
+  try {
+    localStorage.setItem('teaBillData_temp', JSON.stringify(billPackage));
+    const win = window.open('pdf-download.html', '_blank', 'width=400,height=600');
+    if (!win || win.closed || typeof win.closed === 'undefined') {
+      // Popup blocked - show instructions
+      toast('⚠️ Popup blocked! Click allow & try again.');
+      setTimeout(() => {
+        if (confirm('Popup was blocked. Open PDF generator in new tab?')) {
+          window.location.href = 'pdf-download.html';
+        }
+      }, 1500);
+    } else {
+      toast('📄 Generating PDF in new tab...');
+    }
+  } catch(err) {
+    console.error('Storage error:', err);
+    toast('⚠️ Could not prepare PDF data. Try smaller date range.');
+  }
+}
