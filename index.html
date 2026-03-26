@@ -7,7 +7,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Tea Tracker</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- More reliable jsPDF CDN -->
+<script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
 /* ── RESET & BASE ── */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
@@ -46,8 +47,7 @@ input[type=text],input[type=number],input[type=date],input[type=datetime-local],
   font-size:.95rem;color:#222;outline:none;transition:border .2s;-webkit-appearance:none;appearance:none;
 }
 input:focus,select:focus{border-color:#4e4376;box-shadow:0 0 0 3px rgba(78,67,118,.1);}
-.row2{display:flex;gap:10px;}
-.row2>div{flex:1;}
+.row2{display:flex;gap:10px;}.row2>div{flex:1;}
 
 /* ── BUTTONS ── */
 .btn{display:block;width:100%;padding:13px;border:none;border-radius:50px;font-weight:700;font-size:.95rem;cursor:pointer;text-align:center;transition:opacity .15s,transform .1s;}
@@ -96,8 +96,7 @@ input:focus,select:focus{border-color:#4e4376;box-shadow:0 0 0 3px rgba(78,67,11
 .nav-btn .ico{font-size:1.4rem;display:block;margin-bottom:1px;}
 .nav-btn.on{color:#4e4376;}
 
-/* ── POWERED BY ── */
-.pwrby{position:fixed;bottom:60px;width:100%;text-align:center;background:linear-gradient(135deg,#2b5876,#4e4376);color:rgba(255,255,255,.85);padding:5px;font-size:.7rem;font-weight:600;z-index:899;}
+/* ── POWERED BY ── */.pwrby{position:fixed;bottom:60px;width:100%;text-align:center;background:linear-gradient(135deg,#2b5876,#4e4376);color:rgba(255,255,255,.85);padding:5px;font-size:.7rem;font-weight:600;z-index:899;}
 .pwrby b{color:#ffd700;}
 @keyframes hb{0%,100%{transform:scale(1);}50%{transform:scale(1.3);}}
 .hrt{display:inline-block;color:#ff4757;animation:hb 1.4s infinite;}
@@ -128,6 +127,13 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
 /* ── HELPER ── */
 .hint{font-size:.72rem;color:#888;text-align:center;margin-top:8px;line-height:1.5;}
 .mt8{margin-top:8px;}
+
+/* ── PDF LOADING OVERLAY ── */
+.pdf-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:3000;align-items:center;justify-content:center;flex-direction:column;}
+.pdf-overlay.show{display:flex;}
+.pdf-spinner{width:60px;height:60px;border:5px solid rgba(255,255,255,.3);border-top-color:#ffd700;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:15px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.pdf-overlay p{color:#fff;font-size:.95rem;}
 </style>
 </head>
 <body>
@@ -139,7 +145,6 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
 </div>
 
 <div class="wrap">
-
   <!-- ═══ VIEW: ADD ═══ -->
   <div id="view-add" class="view active">
     <div class="stat-banner">
@@ -189,8 +194,7 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
   <div id="view-bill" class="view">
     <div class="card">
       <div class="stitle">🧾 Generate Bill</div>
-      <div class="row2">
-        <div>
+      <div class="row2">        <div>
           <label class="lbl">From Date</label>
           <input type="date" id="billFrom">
         </div>
@@ -239,8 +243,7 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
       <div class="stitle">⚙️ Settings</div>
       <label class="lbl">Office / Company Name</label>
       <input type="text" id="setOfficeName" placeholder="e.g. ABC Office">
-      <label class="lbl">Manager Name</label>
-      <input type="text" id="setManager" placeholder="e.g. Rajesh Kumar">
+      <label class="lbl">Manager Name</label>      <input type="text" id="setManager" placeholder="e.g. Rajesh Kumar">
       <div class="mt8"></div>
       <button class="btn btn-primary" onclick="saveSettings()">✅ Save Settings</button>
 
@@ -289,10 +292,9 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
       <button class="btn btn-grey" onclick="closeModal('confirmOverlay')">Cancel</button>
       <button class="btn btn-danger" id="confirmOkBtn">Yes, Delete</button>
     </div>
-  </div>
-</div>
+  </div></div>
 
-<!-- ═══ BILL TEXT MODAL (copy fallback) ═══ -->
+<!-- ═══ BILL TEXT MODAL ═══ -->
 <div class="overlay" id="billTextOverlay">
   <div class="modal-box">
     <h4>📄 Bill Text</h4>
@@ -303,6 +305,12 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
       <button class="btn btn-copy" onclick="copyFromModal()">📋 Copy</button>
     </div>
   </div>
+</div>
+
+<!-- ═══ PDF LOADING OVERLAY ═══ -->
+<div class="pdf-overlay" id="pdfOverlay">
+  <div class="pdf-spinner"></div>
+  <p id="pdfStatus">Generating PDF...</p>
 </div>
 
 <script>
@@ -319,15 +327,32 @@ var rptData  = [];
 var rptTotal = 0;
 var rptRange = '';
 var pendingConfirm = null;
+var jsPDF = null;
 
-/* All previous localStorage keys — so data is never lost after updates */
+/* All previous localStorage keys */
 var ALL_KEYS = ['teaAppData_v3','teaAppData_vFinal','teaAppData_vDebug','teaAppData'];
 var SAVE_KEY = 'teaAppData_v3';
 
 /* ════════════════════════════
-   INIT
+   HELPER: Normalize date
+════════════════════════════ */
+function getDatePart(datetimeStr) {
+  if (!datetimeStr) return '';
+  return datetimeStr.split('T')[0];
+}
+
+/* ════════════════════════════   INIT
 ════════════════════════════ */
 window.onload = function() {
+  // Load jsPDF properly
+  if (window.jspdf && window.jspdf.jsPDF) {
+    jsPDF = window.jspdf.jsPDF;
+    console.log('✅ jsPDF loaded successfully');
+  } else {
+    console.warn('⚠️ jsPDF not ready, will retry...');
+    setTimeout(initJsPDF, 1000);
+  }
+
   loadData();
 
   /* Set datetime default */
@@ -335,7 +360,7 @@ window.onload = function() {
   now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
   document.getElementById('entryDate').value = now.toISOString().slice(0,16);
 
-  /* Set date defaults — use local date, not UTC */
+  /* Set date defaults */
   var _ld = new Date(); _ld.setMinutes(_ld.getMinutes() - _ld.getTimezoneOffset());
   var today = _ld.toISOString().split('T')[0];
   document.getElementById('billFrom').value = today;
@@ -356,16 +381,26 @@ window.onload = function() {
   /* Form submit */
   document.getElementById('addForm').onsubmit = function(e) {
     e.preventDefault();
+    
+    var dtVal = document.getElementById('entryDate').value;
+    var testDate = new Date(dtVal);
+    if (isNaN(testDate.getTime())) {
+      toast('⚠️ Invalid date/time format');
+      return;
+    }
+    
     var rec = {
-      id:       Date.now(),
-      datetime: document.getElementById('entryDate').value,
+      id:       Date.now(),      datetime: dtVal,
       seller:   document.getElementById('entrySeller').value,
       cups:     parseInt(document.getElementById('entryCups').value) || 0,
       cost:     parseFloat(document.getElementById('entryCost').value) || 0
     };
     if (!rec.datetime || !rec.seller) { toast('⚠️ Please fill all fields'); return; }
     app.records.push(rec);
-    app.records.sort(function(a,b){ return new Date(b.datetime)-new Date(a.datetime); });
+    app.records.sort(function(a,b){ 
+      var da = new Date(a.datetime), db = new Date(b.datetime);
+      return (isNaN(da) || isNaN(db)) ? 0 : db - da; 
+    });
     save();
     toast('✅ Entry saved!');
     this.reset();
@@ -376,6 +411,26 @@ window.onload = function() {
 };
 
 /* ════════════════════════════
+   jsPDF INIT (retry loader)
+════════════════════════════ */
+function initJsPDF() {
+  if (window.jspdf && window.jspdf.jsPDF) {
+    jsPDF = window.jspdf.jsPDF;
+    console.log('✅ jsPDF loaded on retry');
+    return;
+  }
+  // Retry up to 5 times
+  var retries = parseInt(localStorage.getItem('jspdf_retries') || '0');
+  if (retries < 5) {
+    localStorage.setItem('jspdf_retries', retries + 1);
+    setTimeout(initJsPDF, 1000);
+  } else {
+    console.error('❌ jsPDF failed to load after 5 retries');
+    toast('⚠️ PDF feature unavailable (check internet)');
+  }
+}
+
+/* ════════════════════════════
    DATA
 ════════════════════════════ */
 function loadData() {
@@ -384,12 +439,9 @@ function loadData() {
     if (raw) {
       try {
         var parsed = JSON.parse(raw);
-        /* Ensure all expected fields exist */
-        app.officeName = parsed.officeName || app.officeName;
-        app.manager    = parsed.manager    || app.manager;
+        app.officeName = parsed.officeName || app.officeName;        app.manager    = parsed.manager    || app.manager;
         app.sellers    = parsed.sellers    || app.sellers;
         app.records    = parsed.records    || app.records;
-        /* Migrate to current key */
         if (ALL_KEYS[i] !== SAVE_KEY) localStorage.setItem(SAVE_KEY, JSON.stringify(app));
         break;
       } catch(ex) { /* corrupt, skip */ }
@@ -436,8 +488,7 @@ function updateStats() {
   var t = 0;
   for (var i=0;i<app.records.length;i++) {
     var r = app.records[i];
-    if (r.datetime && r.datetime.split('T')[0] === today) t += parseFloat(r.cost)||0;
-  }
+    if (getDatePart(r.datetime) === today) t += parseFloat(r.cost)||0;  }
   document.getElementById('todayAmt').textContent = 'Rs. ' + t.toFixed(2);
 }
 
@@ -454,7 +505,7 @@ function renderHistory() {
   for (var i=0;i<app.records.length;i++) {
     var r  = app.records[i];
     var d  = new Date(r.datetime);
-    var ds = isNaN(d)?r.datetime:d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
+    var ds = isNaN(d)?getDatePart(r.datetime):d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
     var ts = isNaN(d)?'':d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     html += '<tr>'
       +'<td><b>'+ds+'</b><br><span style="font-size:.75rem;color:#888">'+ts+'</span></td>'
@@ -469,7 +520,6 @@ function renderHistory() {
    SELLERS
 ════════════════════════════ */
 function renderSellers() {
-  /* Dropdown */
   var sel = document.getElementById('entrySeller');
   sel.innerHTML = '';
   for (var i=0;i<app.sellers.length;i++) {
@@ -477,7 +527,6 @@ function renderSellers() {
     o.value = o.text = app.sellers[i];
     sel.appendChild(o);
   }
-  /* Settings list */
   var ul = document.getElementById('sellerList');
   if (!app.sellers || app.sellers.length===0) {
     ul.innerHTML='<li style="color:#aaa;font-size:.85rem;padding:10px 0;">No sellers yet.</li>';
@@ -488,8 +537,7 @@ function renderSellers() {
     h+='<li><span>'+app.sellers[j]+'</span>'
      +'<button class="btn btn-outline-danger btn-sm" onclick="removeSeller('+j+')">✕ Remove</button></li>';
   }
-  ul.innerHTML = h;
-}
+  ul.innerHTML = h;}
 
 function addSeller() {
   var v = document.getElementById('newSeller').value.trim();
@@ -497,14 +545,14 @@ function addSeller() {
   for (var i=0;i<app.sellers.length;i++) { if(app.sellers[i]===v){toast('⚠️ Already exists!');return;} }
   app.sellers.push(v);
   document.getElementById('newSeller').value='';
-  save();          /* ✅ FIX: persist sellers to localStorage */
+  save();
   renderSellers();
   toast('✅ Seller added!');
 }
 
 function removeSeller(i) {
   app.sellers.splice(i,1);
-  save();          /* ✅ FIX: persist seller removal */
+  save();
   renderSellers();
 }
 
@@ -521,7 +569,7 @@ function saveSettings() {
 }
 
 /* ════════════════════════════
-   GENERATE BILL (view on screen)
+   GENERATE BILL
 ════════════════════════════ */
 function generateBill() {
   var from = document.getElementById('billFrom').value;
@@ -533,10 +581,12 @@ function generateBill() {
   rptData = [];
   for (var i=0;i<app.records.length;i++) {
     var r = app.records[i];
-    var d = r.datetime ? r.datetime.split('T')[0] : '';
-    if (d >= from && d <= to) rptData.push(r);
+    var recordDate = getDatePart(r.datetime);
+    if (recordDate >= from && recordDate <= to) rptData.push(r);
   }
-  rptData.sort(function(a,b){return new Date(a.datetime)-new Date(b.datetime);});
+  rptData.sort(function(a,b){
+    var da = new Date(a.datetime), db = new Date(b.datetime);
+    return (isNaN(da) || isNaN(db)) ? 0 : da - db;  });
 
   if (rptData.length === 0) {
     toast('⚠️ No records found for this period');
@@ -551,9 +601,10 @@ function generateBill() {
     var d2 = new Date(r2.datetime);
     var cost = parseFloat(r2.cost);
     rptTotal += cost;
+    var dtDisplay = getDatePart(r2.datetime);
+    var tmDisplay = isNaN(d2)?'--:--':d2.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     rows += '<tr>'
-      +'<td>'+r2.datetime.split('T')[0]+'<br><span style="font-size:.75rem;color:#888">'
-      +(isNaN(d2)?'':d2.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}))+'</span></td>'
+      +'<td>'+dtDisplay+'<br><span style="font-size:.75rem;color:#888">'+tmDisplay+'</span></td>'
       +'<td>'+r2.seller+'</td>'
       +'<td style="text-align:center">'+r2.cups+'</td>'
       +'<td>Rs.'+cost.toFixed(2)+'</td>'
@@ -570,12 +621,12 @@ function generateBill() {
 
   setTimeout(function(){
     document.getElementById('billPreview').scrollIntoView({behavior:'smooth',block:'start'});
-  },100);
+    toast('📄 Bill generated! Scroll down to view.');
+  },150);
 }
 
 /* ════════════════════════════
    BUILD PLAIN TEXT BILL
-   Shareable to any app
 ════════════════════════════ */
 function buildTextBill() {
   var sep = '------------------------------------';
@@ -584,14 +635,13 @@ function buildTextBill() {
   t += app.officeName + '\n';
   t += sep + '\n';
   t += 'Manager : ' + app.manager + '\n';
-  t += 'Period  : ' + rptRange    + '\n';
-  t += sep + '\n';
+  t += 'Period  : ' + rptRange    + '\n';  t += sep + '\n';
   t += 'No  Date        Time   Seller      Cups  Cost\n';
   t += sep + '\n';
   for (var i=0;i<rptData.length;i++) {
     var r  = rptData[i];
     var d  = new Date(r.datetime);
-    var dt = r.datetime.split('T')[0];
+    var dt = getDatePart(r.datetime);
     var tm = isNaN(d)?'--:--':d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     var sl = (r.seller||'').substring(0,10);
     var n  = (''+(i+1)).padStart(2,'0');
@@ -610,7 +660,7 @@ function buildTextBill() {
 }
 
 /* ════════════════════════════
-   SHARE  (opens native Android share sheet)
+   SHARE
 ════════════════════════════ */
 function shareBill() {
   if (!rptData||rptData.length===0){toast('⚠️ View bill details first');return;}
@@ -624,7 +674,7 @@ function shareBill() {
 }
 
 /* ════════════════════════════
-   COPY to clipboard
+   COPY
 ════════════════════════════ */
 function copyBill() {
   if (!rptData||rptData.length===0){toast('⚠️ View bill details first');return;}
@@ -634,8 +684,7 @@ function copyBill() {
       .then(function(){ toast('✅ Copied to clipboard!'); })
       .catch(function(){ showBillText(text); });
   } else {
-    showBillText(text);
-  }
+    showBillText(text);  }
 }
 
 function showBillText(text) {
@@ -655,109 +704,146 @@ function copyFromModal() {
 }
 
 /* ════════════════════════════
-   DOWNLOAD PDF
+   DOWNLOAD PDF - SIMPLIFIED & RELIABLE
 ════════════════════════════ */
 function downloadPDF() {
-  if (!rptData || rptData.length === 0) { toast('⚠️ View bill details first'); return; }
-
-  var { jsPDF } = window.jspdf;
-  var doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-
-  var pageW = 210;
-  var margin = 14;
-  var colW   = pageW - margin * 2;
-  var y      = 18;
-
-  /* ── Header ── */
-  doc.setFillColor(43, 88, 118);
-  doc.rect(0, 0, pageW, 28, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
-  doc.text(app.officeName + ' — Tea Expense Report', pageW / 2, 12, { align: 'center' });
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Manager: ' + app.manager + '   |   Period: ' + rptRange, pageW / 2, 21, { align: 'center' });
-
-  y = 36;
-
-  /* ── Table header ── */
-  var cols = ['#', 'Date', 'Time', 'Seller', 'Cups', 'Cost (Rs.)'];
-  var cw   = [10, 28, 20, 50, 18, 30];  /* column widths */
-  doc.setFillColor(43, 88, 118);
-  doc.rect(margin, y - 5, colW, 8, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  var cx = margin;
-  for (var h = 0; h < cols.length; h++) {
-    doc.text(cols[h], cx + 2, y); cx += cw[h];
+  if (!rptData || rptData.length === 0) { 
+    toast('⚠️ View bill details first'); 
+    return; 
   }
-
-  /* ── Table rows ── */
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  for (var i = 0; i < rptData.length; i++) {
-    y += 8;
-    /* Zebra stripe */
-    if (i % 2 === 0) {
-      doc.setFillColor(240, 244, 251);
-      doc.rect(margin, y - 5.5, colW, 7.5, 'F');
-    }
-    doc.setTextColor(34, 34, 34);
-    var r  = rptData[i];
-    var d  = new Date(r.datetime);
-    var dt = r.datetime.split('T')[0];
-    var tm = isNaN(d) ? '--:--' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    var row = [''+(i+1), dt, tm, (r.seller||'').substring(0,18), ''+r.cups, 'Rs.'+parseFloat(r.cost).toFixed(2)];
-    cx = margin;
-    for (var c = 0; c < row.length; c++) {
-      doc.text(row[c], cx + 2, y); cx += cw[c];
-    }
-
-    /* New page if needed */
-    if (y > 265) {
-      doc.addPage();
-      y = 18;
+  
+  // Check if jsPDF is available
+  if (!jsPDF) {
+    if (window.jspdf && window.jspdf.jsPDF) {
+      jsPDF = window.jspdf.jsPDF;
+    } else {
+      toast('⚠️ PDF library loading... Please wait 3 seconds and try again.');
+      initJsPDF();
+      return;
     }
   }
-
-  /* ── Total row ── */
-  y += 9;
-  doc.setFillColor(244, 246, 251);
-  doc.rect(margin, y - 5.5, colW, 8, 'F');
-  doc.setDrawColor(43, 88, 118);
-  doc.setLineWidth(0.5);
-  doc.line(margin, y - 5.5, margin + colW, y - 5.5);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.setTextColor(43, 88, 118);
-  doc.text('GRAND TOTAL', margin + 2, y);
-  doc.text('Rs. ' + rptTotal.toFixed(2), margin + colW - 2, y, { align: 'right' });
-
-  /* ── Signature lines ── */
-  y += 22;
-  doc.setTextColor(80, 80, 80);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.setLineWidth(0.4);
-  doc.setDrawColor(80, 80, 80);
-  doc.line(margin, y, margin + 50, y);
-  doc.line(margin + colW - 50, y, margin + colW, y);
-  doc.text('Manager Signature', margin, y + 5);
-  doc.text('Seller Signature', margin + colW - 50, y + 5);
-
-  /* ── Footer ── */
-  doc.setFontSize(7);
-  doc.setTextColor(170, 170, 170);
-  doc.text('Generated by Tea Tracker | Piyuneel', pageW / 2, 290, { align: 'center' });
-
-  /* ── Save ── */
-  var fname = app.officeName.replace(/\s+/g,'-') + '_TeaBill_' + rptRange.replace(/\s/g,'') + '.pdf';
-  doc.save(fname);
-  toast('✅ PDF downloading…');
+  
+  // Show loading overlay
+  document.getElementById('pdfOverlay').classList.add('show');
+  document.getElementById('pdfStatus').textContent = 'Generating PDF...';
+  
+  setTimeout(function() {
+    try {
+      var doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      
+      var pageW = 210;
+      var margin = 15;
+      var y = 20;      
+      // Header background
+      doc.setFillColor(43, 88, 118);
+      doc.rect(0, 0, pageW, 30, 'F');
+      
+      // Header text
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(18);
+      doc.text(app.officeName, pageW / 2, 15, { align: 'center' });
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Tea Expense Report', pageW / 2, 23, { align: 'center' });
+      
+      // Info line
+      doc.setFontSize(9);
+      doc.text('Manager: ' + app.manager, margin, 38);
+      doc.text('Period: ' + rptRange, pageW - margin, 38, { align: 'right' });
+      
+      // Table header
+      y = 50;
+      doc.setFillColor(43, 88, 118);
+      doc.rect(margin, y - 5, pageW - margin * 2, 8, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.text('#', margin + 3, y);
+      doc.text('Date', margin + 15, y);
+      doc.text('Time', margin + 40, y);
+      doc.text('Seller', margin + 65, y);
+      doc.text('Cups', margin + 130, y);
+      doc.text('Cost', pageW - margin - 10, y, { align: 'right' });
+      
+      // Table rows
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      for (var i = 0; i < rptData.length; i++) {
+        y += 7;
+        
+        // Alternating row color
+        if (i % 2 === 0) {
+          doc.setFillColor(245, 245, 245);
+          doc.rect(margin, y - 5, pageW - margin * 2, 6, 'F');
+        }
+        
+        doc.setTextColor(0, 0, 0);
+        var r = rptData[i];
+        var d = new Date(r.datetime);
+        var dt = getDatePart(r.datetime);
+        var tm = isNaN(d) ? '--:--' : d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});        
+        doc.text('' + (i + 1), margin + 3, y);
+        doc.text(dt, margin + 15, y);
+        doc.text(tm, margin + 40, y);
+        doc.text((r.seller || '').substring(0, 18), margin + 65, y);
+        doc.text('' + r.cups, margin + 130, y);
+        doc.text('Rs.' + parseFloat(r.cost).toFixed(2), pageW - margin - 10, y, { align: 'right' });
+        
+        // New page if needed
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+      }
+      
+      // Total
+      y += 10;
+      doc.setFillColor(220, 230, 240);
+      doc.rect(margin, y - 5, pageW - margin * 2, 8, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(43, 88, 118);
+      doc.text('GRAND TOTAL', pageW - margin - 60, y, { align: 'right' });
+      doc.text('Rs. ' + rptTotal.toFixed(2), pageW - margin - 10, y, { align: 'right' });
+      
+      // Signatures
+      y += 25;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(80, 80, 80);
+      doc.setDrawColor(80, 80, 80);
+      doc.setLineWidth(0.3);
+      doc.line(margin + 20, y, margin + 70, y);
+      doc.line(pageW - margin - 70, y, pageW - margin - 20, y);
+      doc.text('Manager', margin + 35, y + 5, { align: 'center' });
+      doc.text('Seller', pageW - margin - 45, y + 5, { align: 'center' });
+      
+      // Footer
+      doc.setFontSize(7);
+      doc.setTextColor(150, 150, 150);
+      doc.text('Generated by Tea Tracker | Piyuneel', pageW / 2, 285, { align: 'center' });
+      
+      // Save
+      var fname = app.officeName.replace(/[^a-z0-9]/gi, '_') + '_TeaBill.pdf';
+      doc.save(fname);
+      
+      // Hide overlay & show success
+      document.getElementById('pdfOverlay').classList.remove('show');
+      toast('✅ PDF downloaded!');
+          } catch (e) {
+      console.error('PDF Error:', e);
+      document.getElementById('pdfOverlay').classList.remove('show');
+      document.getElementById('pdfStatus').textContent = 'Error: ' + e.message;
+      toast('⚠️ PDF failed: ' + e.message);
+      
+      // Fallback: show text version
+      setTimeout(function() {
+        showBillText(buildTextBill());
+      }, 1500);
+    }
+  }, 500);
 }
-
 
 function askClearRange() {
   var from = document.getElementById('clrFrom').value;
@@ -765,14 +851,14 @@ function askClearRange() {
   if (!from||!to) { toast('⚠️ Select From and To dates'); return; }
   if (from>to)    { toast('⚠️ From must be before To');   return; }
   var hits = app.records.filter(function(r){
-    var d=r.datetime.split('T')[0]; return d>=from&&d<=to;
+    var d=getDatePart(r.datetime); return d>=from&&d<=to;
   });
   if (hits.length===0){ toast('⚠️ No records in that period'); return; }
   document.getElementById('confirmMsg').innerHTML =
     'Delete <b>'+hits.length+' record(s)</b> from <b>'+from+'</b> to <b>'+to+'</b>?';
   pendingConfirm = function(){
     app.records = app.records.filter(function(r){
-      var d=r.datetime.split('T')[0]; return !(d>=from&&d<=to);
+      var d=getDatePart(r.datetime); return !(d>=from&&d<=to);
     });
     save(); renderHistory(); toast('✅ '+hits.length+' record(s) deleted.');
   };
@@ -794,8 +880,7 @@ function askClearAll() {
    MODAL HELPERS
 ════════════════════════════ */
 function closeModal(id) {
-  document.getElementById(id).classList.remove('show');
-}
+  document.getElementById(id).classList.remove('show');}
 
 /* ════════════════════════════
    TOAST
