@@ -241,6 +241,26 @@
         .list-group-item { border-color: #f0f0f0; font-size: 0.92rem; }
         .text-rupee { font-family: 'Nunito', sans-serif; }
         .date-small { font-size: 0.78rem; color: #888; }
+
+        /* ══════════════════════════════════════════
+           PRINT STYLES — "Save as PDF" via browser
+           ══════════════════════════════════════════ */
+        @media print {
+            /* Hide everything except the print bill */
+            body * { visibility: hidden !important; }
+            #print-bill, #print-bill * { visibility: visible !important; }
+            #print-bill {
+                position: fixed !important;
+                top: 0 !important; left: 0 !important;
+                width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 12mm 14mm;
+            }
+        }
     </style>
 </head>
 <body>
@@ -373,11 +393,11 @@
             </div>
 
             <!-- Download Button -->
-            <button id="downloadBtn" class="btn btn-dark w-100 btn-pill mt-3" onclick="downloadPDF()">
-                <i class="fas fa-file-pdf me-2"></i>Download PDF Bill
+            <button id="printBtn" class="btn btn-dark w-100 btn-pill mt-3" onclick="printBill()">
+                <i class="fas fa-print me-2"></i>Print / Save as PDF
             </button>
             <p class="text-center text-muted mt-2" style="font-size:0.75rem;">
-                <i class="fas fa-info-circle me-1"></i>PDF will open or save to your Downloads folder.
+                <i class="fas fa-info-circle me-1"></i>Tap Print → choose <strong>Save as PDF</strong> from the printer list.
             </p>
         </div>
     </div>
@@ -448,6 +468,12 @@
 
 </div><!-- /container -->
 
+
+<!-- ══════════ PRINT-ONLY BILL (hidden on screen) ══════════ -->
+<div id="print-bill" style="display:none; font-family:Arial,sans-serif; font-size:12px; color:#111;">
+    <!-- filled dynamically by printBill() -->
+</div>
+
 <!-- ══════════ CONFIRM MODAL ══════════ -->
 <div class="modal fade" id="confirmModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered mx-3">
@@ -495,8 +521,7 @@
 
 <!-- ══════════ SCRIPTS ══════════ -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
 
 <script>
 /* ════════════════════════════════════════════════════
@@ -743,193 +768,101 @@ function generateReport() {
 }
 
 /* ════════════════════════════════════════════════════
-   PDF GENERATION — MOBILE / WEBVIEW SAFE
+   PRINT / SAVE AS PDF
    ════════════════════════════════════════════════════
-
-   STRATEGY (tried in order):
-   1. Web Share API  — works in Android Chrome & some WebView APKs
-                       (share sheet lets user save to Downloads, Drive, WhatsApp…)
-   2. Blob URL + <a download> — works in Android Chrome browser
-                       (silent fail in many WebViews → falls through to #3)
-   3. Base64 data URI in new tab — universal WebView fallback
-                       (user sees PDF in browser/viewer; taps share to save)
+   Uses window.print() — the browser's native print system.
+   On Android: Print dialog → "Save as PDF" in the printer list.
+   Works in ALL browsers and WebView APKs without any library.
    ════════════════════════════════════════════════════ */
-function buildPDFDocument() {
-    // Guard — libraries
-    if (typeof window.jspdf === 'undefined')
-        throw new Error("jsPDF library failed to load. Please check your internet connection.");
+function printBill() {
+    if (!currentReportData || currentReportData.length === 0) {
+        showToast("⚠️ Please tap 'View Bill Details' first.");
+        return;
+    }
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-
-    if (typeof doc.autoTable !== 'function')
-        throw new Error("jsPDF-autoTable plugin failed to load. Please check your internet connection.");
-
-    // Guard — data
-    if (!currentReportData || currentReportData.length === 0)
-        throw new Error("No bill data found. Please tap 'View Bill Details' first.");
-
-    const officeName = appData.officeName;
-
-    /* ── PDF HEADER ── */
-    // Background bar
-    doc.setFillColor(43, 88, 118);
-    doc.rect(0, 0, 210, 38, 'F');
-
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(18);
-    doc.setFont(undefined, 'bold');
-    doc.text(officeName, 105, 14, null, null, 'center');
-
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
-    doc.text('Tea Expense Report', 105, 22, null, null, 'center');
-
-    doc.setFontSize(9);
-    doc.setTextColor(200, 220, 255);
-    doc.text(`Manager: ${appData.manager}`, 105, 29, null, null, 'center');
-    doc.text(`Period: ${currentReportRange}`, 105, 35, null, null, 'center');
-
-    /* ── DATA TABLE ── */
-    // Explicitly map every row right before autoTable call
-    // (critical for Android WebViews where closures can lose references)
-    const tableRows = [];
-    for (let i = 0; i < currentReportData.length; i++) {
-        const r = currentReportData[i];
+    // Build rows HTML
+    let rowsHtml = '';
+    currentReportData.forEach(r => {
         const d = new Date(r.datetime);
         const datePart = r.datetime.split('T')[0];
         const timePart = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        tableRows.push([
-            datePart + '\n' + timePart,
-            String(r.seller),
-            String(r.cups),
-            'Rs. ' + parseFloat(r.cost).toFixed(2)
-        ]);
-    }
-
-    doc.autoTable({
-        head     : [['Date & Time', 'Seller', 'Cups', 'Cost (Rs.)']],
-        body     : tableRows,
-        startY   : 42,
-        theme    : 'grid',
-        styles   : { font: 'helvetica', fontSize: 9, cellPadding: 4, textColor: [30, 30, 30] },
-        headStyles: { fillColor: [78, 67, 118], textColor: 255, fontStyle: 'bold', fontSize: 9 },
-        alternateRowStyles: { fillColor: [245, 247, 255] },
-        columnStyles: {
-            0: { cellWidth: 38 },
-            1: { cellWidth: 60 },
-            2: { cellWidth: 20, halign: 'center' },
-            3: { cellWidth: 35, halign: 'right' }
-        }
+        rowsHtml += `
+            <tr>
+                <td style="padding:7px 10px;border:1px solid #ccc;">${datePart}<br><span style="font-size:10px;color:#666">${timePart}</span></td>
+                <td style="padding:7px 10px;border:1px solid #ccc;">${r.seller}</td>
+                <td style="padding:7px 10px;border:1px solid #ccc;text-align:center;">${r.cups}</td>
+                <td style="padding:7px 10px;border:1px solid #ccc;text-align:right;">Rs. ${r.cost.toFixed(2)}</td>
+            </tr>`;
     });
 
-    /* ── TOTAL ROW ── */
-    const finalY = doc.lastAutoTable.finalY;
-    doc.setFillColor(43, 88, 118);
-    doc.rect(14, finalY, 182, 10, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont(undefined, 'bold');
-    doc.setFontSize(10);
-    doc.text('Grand Total:', 120, finalY + 7);
-    doc.text('Rs. ' + currentReportTotal.toFixed(2), 196, finalY + 7, null, null, 'right');
+    // Build the full print document
+    const printHTML = `
+        <div style="max-width:700px;margin:0 auto;font-family:Arial,sans-serif;font-size:12px;color:#111;">
 
-    /* ── SIGNATURE LINES ── */
-    const sigY = finalY + 30;
-    doc.setTextColor(80, 80, 80);
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(9);
-    doc.setDrawColor(120, 120, 120);
+            <!-- Header banner -->
+            <div style="background:linear-gradient(135deg,#2b5876,#4e4376);color:white;padding:18px 24px;border-radius:8px 8px 0 0;text-align:center;">
+                <div style="font-size:20px;font-weight:900;letter-spacing:0.5px;">${appData.officeName}</div>
+                <div style="font-size:13px;margin-top:4px;opacity:0.9;">Tea Expense Report</div>
+            </div>
 
-    doc.line(20, sigY, 75, sigY);
-    doc.text('Manager Signature', 47, sigY + 5, null, null, 'center');
+            <!-- Meta info bar -->
+            <div style="background:#f4f6fb;border:1px solid #dde2ee;border-top:none;padding:10px 20px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                <div><span style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;">Manager</span><br><strong>${appData.manager}</strong></div>
+                <div style="text-align:right;"><span style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;">Period</span><br><strong>${currentReportRange}</strong></div>
+            </div>
 
-    doc.line(140, sigY, 195, sigY);
-    doc.text('Seller Signature', 167, sigY + 5, null, null, 'center');
+            <!-- Table -->
+            <table style="width:100%;border-collapse:collapse;margin-top:16px;font-size:12px;">
+                <thead>
+                    <tr style="background:#2b5876;color:white;">
+                        <th style="padding:9px 10px;border:1px solid #1e4060;text-align:left;">Date & Time</th>
+                        <th style="padding:9px 10px;border:1px solid #1e4060;text-align:left;">Seller</th>
+                        <th style="padding:9px 10px;border:1px solid #1e4060;text-align:center;">Cups</th>
+                        <th style="padding:9px 10px;border:1px solid #1e4060;text-align:right;">Cost</th>
+                    </tr>
+                </thead>
+                <tbody>${rowsHtml}</tbody>
+                <tfoot>
+                    <tr style="background:#2b5876;color:white;">
+                        <td colspan="3" style="padding:9px 12px;border:1px solid #1e4060;text-align:right;font-weight:bold;">Grand Total</td>
+                        <td style="padding:9px 12px;border:1px solid #1e4060;text-align:right;font-weight:900;font-size:13px;">Rs. ${currentReportTotal.toFixed(2)}</td>
+                    </tr>
+                </tfoot>
+            </table>
 
-    /* ── FOOTER ── */
-    const pageH = doc.internal.pageSize.height;
-    doc.setFontSize(7);
-    doc.setTextColor(160, 160, 160);
-    doc.text('Generated by Tea Tracker — Powered by Piyuneel', 105, pageH - 6, null, null, 'center');
+            <!-- Signatures -->
+            <div style="display:flex;justify-content:space-between;margin-top:40px;padding:0 10px;">
+                <div style="text-align:center;">
+                    <div style="width:140px;border-top:1.5px solid #555;margin-bottom:6px;"></div>
+                    <span style="font-size:11px;color:#555;">Manager Signature</span>
+                </div>
+                <div style="text-align:center;">
+                    <div style="width:140px;border-top:1.5px solid #555;margin-bottom:6px;"></div>
+                    <span style="font-size:11px;color:#555;">Seller Signature</span>
+                </div>
+            </div>
 
-    return doc;
+            <!-- Footer -->
+            <div style="text-align:center;margin-top:30px;padding-top:12px;border-top:1px solid #eee;font-size:10px;color:#aaa;">
+                Generated by Tea Tracker &nbsp;|&nbsp; Powered by Piyuneel ❤
+            </div>
+        </div>`;
+
+    // Inject into the hidden print div
+    const printDiv = document.getElementById('print-bill');
+    printDiv.innerHTML = printHTML;
+    printDiv.style.display = 'block';
+
+    // Give browser a moment to render, then print
+    setTimeout(() => {
+        window.print();
+        // After print dialog closes, hide the div again
+        setTimeout(() => {
+            printDiv.style.display = 'none';
+        }, 1000);
+    }, 150);
 }
 
-/* ─────────────────────────────────────────────────────
-   DOWNLOAD ENTRY POINT
-   ───────────────────────────────────────────────────── */
-function downloadPDF() {
-    const btn  = document.getElementById('downloadBtn');
-    const orig = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Building PDF...';
-    btn.disabled  = true;
-
-    // Small timeout so spinner renders before heavy JS work
-    setTimeout(async () => {
-        try {
-            const doc      = buildPDFDocument();
-            const fileName = `${appData.officeName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_bill_${new Date().toISOString().split('T')[0]}.pdf`;
-            const pdfBlob  = doc.output('blob');
-
-            // ── STRATEGY 1: Web Share API ──────────────────────────────
-            // Works in Android Chrome (v75+) and many WebView APKs that
-            // enable file sharing. Opens the native Android share sheet.
-            if (navigator.canShare && navigator.canShare({ files: [new File([pdfBlob], fileName, { type: 'application/pdf' })] })) {
-                try {
-                    const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
-                    await navigator.share({ files: [pdfFile], title: fileName });
-                    btn.innerHTML = '<i class="fas fa-check me-2"></i>Shared!';
-                    setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 3000);
-                    return; // ✅ done
-                } catch (shareErr) {
-                    // User cancelled share or it failed — fall through to strategy 2
-                    if (shareErr.name === 'AbortError') {
-                        btn.innerHTML = orig; btn.disabled = false;
-                        return; // User deliberately cancelled
-                    }
-                    // Any other error: try next strategy
-                }
-            }
-
-            // ── STRATEGY 2: Blob URL + <a download> ───────────────────
-            // Works in standard Android Chrome / desktop browsers.
-            // Silently fails in restrictive WebViews (no download manager).
-            const blobUrl = URL.createObjectURL(pdfBlob);
-            const link    = document.createElement('a');
-            link.href     = blobUrl;
-            link.download = fileName;
-            link.target   = '_blank';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            // Wait 8 seconds before revoking so mobile has time to handle it
-            setTimeout(() => URL.revokeObjectURL(blobUrl), 8000);
-
-            // If we're likely in a WebView APK (no navigator.share, no real download manager)
-            // also open as base64 in a new tab after a small delay (strategy 3)
-            const isWebView = !navigator.share && /wv|WebView/.test(navigator.userAgent);
-            if (isWebView) {
-                setTimeout(() => {
-                    try {
-                        const b64 = doc.output('datauristring');
-                        window.open(b64, '_blank');
-                    } catch (e) { /* ignore if popups blocked */ }
-                }, 600);
-            }
-
-            btn.innerHTML = '<i class="fas fa-check me-2"></i>Done!';
-            showToast("📥 PDF sent to Downloads!");
-            setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 3000);
-
-        } catch (err) {
-            console.error('[Tea Tracker PDF Error]', err);
-            alert('❌ PDF Error: ' + err.message);
-            btn.innerHTML = orig;
-            btn.disabled  = false;
-        }
-    }, 300);
-}
 
 /* ════════════════════════════════════════════════════
    CLEAR DATA
