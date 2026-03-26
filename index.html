@@ -1,952 +1,704 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#2b5876">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>Tea Tracker</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#2b5876">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Tea Tracker</title>
+<style>
+/* ── RESET & BASE ── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;width:100%;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#eef1f7;color:#222;padding-bottom:110px;font-size:15px;}
+input,select,button,textarea{font-family:inherit;font-size:inherit;}
 
-    <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+/* ── HEADER ── */
+.hdr{background:linear-gradient(135deg,#2b5876,#4e4376);color:#fff;padding:18px 16px 26px;border-radius:0 0 24px 24px;text-align:center;box-shadow:0 4px 16px rgba(78,67,118,.4);margin-bottom:16px;}
+.hdr h2{font-size:1.3rem;font-weight:800;margin:0;}
+.hdr p{font-size:.82rem;opacity:.85;margin:4px 0 0;}
 
-    <style>
-        /* ── BASE ── */
-        * { box-sizing: border-box; }
-        body {
-            background: #eef1f7;
-            font-family: 'Nunito', sans-serif;
-            padding-bottom: 120px;
-            min-height: 100vh;
-        }
+/* ── CONTAINER ── */
+.wrap{padding:0 12px;}
 
-        /* ── HEADER ── */
-        .header-bg {
-            background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
-            color: white;
-            padding: 20px 20px 28px;
-            border-radius: 0 0 28px 28px;
-            margin-bottom: 20px;
-            box-shadow: 0 6px 20px rgba(78,67,118,0.35);
-            position: relative;
-            overflow: hidden;
-        }
-        .header-bg::before {
-            content: '';
-            position: absolute;
-            top: -40px; right: -40px;
-            width: 160px; height: 160px;
-            background: rgba(255,255,255,0.07);
-            border-radius: 50%;
-        }
-        .header-bg::after {
-            content: '';
-            position: absolute;
-            bottom: -30px; left: -20px;
-            width: 120px; height: 120px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 50%;
-        }
-        .header-bg h3 { font-weight: 800; font-size: 1.4rem; margin: 0; }
-        .header-bg p  { margin: 4px 0 0; font-size: 0.85rem; opacity: 0.85; }
+/* ── VIEWS ── */
+.view{display:none;} .view.active{display:block;}
 
-        /* ── CARDS ── */
-        .card {
-            border: none;
-            border-radius: 18px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            margin-bottom: 14px;
-            overflow: hidden;
-        }
+/* ── CARDS ── */
+.card{background:#fff;border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,.06);padding:16px;margin-bottom:14px;}
 
-        /* ── SECTION TITLE ── */
-        .section-title {
-            font-weight: 800;
-            font-size: 1.05rem;
-            color: #2b5876;
-            margin-bottom: 14px;
-        }
+/* ── STATS BANNER ── */
+.stat-banner{background:linear-gradient(135deg,#2b5876,#4e4376);color:#fff;border-radius:16px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.stat-banner .lbl{font-size:.8rem;opacity:.8;}
+.stat-banner .amt{font-size:1.5rem;font-weight:800;margin-top:2px;}
 
-        /* ── FORM ── */
-        .form-label-sm {
-            font-size: 0.75rem;
-            color: #888;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-        .form-control, .form-select {
-            border-radius: 10px;
-            border: 1.5px solid #e0e4ee;
-            font-family: 'Nunito', sans-serif;
-            font-size: 0.95rem;
-            padding: 10px 14px;
-            background: #fff;
-            transition: border-color 0.2s;
-        }
-        .form-control:focus, .form-select:focus {
-            border-color: #4e4376;
-            box-shadow: 0 0 0 3px rgba(78,67,118,0.12);
-        }
+/* ── SECTION TITLE ── */
+.stitle{font-weight:800;font-size:1rem;color:#2b5876;margin-bottom:14px;}
 
-        /* ── BUTTONS ── */
-        .btn {
-            border-radius: 12px;
-            font-family: 'Nunito', sans-serif;
-            font-weight: 700;
-            font-size: 0.95rem;
-            padding: 11px 18px;
-            transition: all 0.2s;
-        }
-        .btn-primary   { background: linear-gradient(135deg, #2b5876, #4e4376); border: none; }
-        .btn-primary:hover, .btn-primary:active { background: linear-gradient(135deg, #1e3f55, #3a3060); transform: translateY(-1px); }
-        .btn-success   { background: linear-gradient(135deg, #11998e, #38ef7d); border: none; color: #fff; }
-        .btn-dark      { background: #1e1e2e; border: none; }
-        .btn-outline-danger { border-radius: 12px; }
-        .btn-danger    { border-radius: 12px; }
-        .btn-pill      { border-radius: 50px !important; }
+/* ── LABELS ── */
+label.lbl{display:block;font-size:.72rem;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;margin-top:10px;}
 
-        /* ── STATS CARD ── */
-        .stats-card {
-            background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
-            color: white;
-            border-radius: 18px;
-            padding: 16px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 14px;
-        }
-        .stats-card .label { font-size: 0.85rem; opacity: 0.85; }
-        .stats-card .amount { font-size: 1.4rem; font-weight: 800; }
+/* ── INPUTS ── */
+input[type=text],input[type=number],input[type=date],input[type=datetime-local],select{
+  width:100%;padding:11px 14px;border:1.5px solid #dde3ee;border-radius:10px;background:#fff;
+  font-size:.95rem;color:#222;outline:none;transition:border .2s;-webkit-appearance:none;appearance:none;
+}
+input:focus,select:focus{border-color:#4e4376;box-shadow:0 0 0 3px rgba(78,67,118,.1);}
+.row2{display:flex;gap:10px;}
+.row2>div{flex:1;}
 
-        /* ── HISTORY TABLE ── */
-        .table { font-size: 0.88rem; }
-        .table thead th { color: #888; font-size: 0.75rem; text-transform: uppercase; font-weight: 700; border: none; padding: 6px 12px; }
-        .table tbody td { padding: 10px 12px; border-color: #f0f0f0; vertical-align: middle; }
-        .table tbody tr:last-child td { border-bottom: none; }
-        .seller-badge {
-            background: rgba(78,67,118,0.1);
-            color: #4e4376;
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 0.78rem;
-            font-weight: 700;
-        }
+/* ── BUTTONS ── */
+.btn{display:block;width:100%;padding:13px;border:none;border-radius:50px;font-weight:700;font-size:.95rem;cursor:pointer;text-align:center;transition:opacity .15s,transform .1s;}
+.btn:active{opacity:.85;transform:scale(.98);}
+.btn-primary{background:linear-gradient(135deg,#2b5876,#4e4376);color:#fff;}
+.btn-success{background:linear-gradient(135deg,#11998e,#38ef7d);color:#fff;}
+.btn-dark{background:#1e1e2e;color:#fff;}
+.btn-danger{background:#e74c3c;color:#fff;}
+.btn-outline-danger{background:transparent;color:#e74c3c;border:1.5px solid #e74c3c;border-radius:50px;}
+.btn-grey{background:#e0e4ee;color:#444;}
+.btn-share{background:linear-gradient(135deg,#25d366,#128c7e);color:#fff;}
+.btn-copy{background:linear-gradient(135deg,#4e4376,#2b5876);color:#fff;}
+.btn-sm{padding:9px 16px;font-size:.85rem;width:auto;display:inline-block;}
+.btn-row{display:flex;gap:10px;margin-top:12px;}
+.btn-row .btn{flex:1;}
 
-        /* ── BILL PREVIEW TABLE ── */
-        .bill-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        .bill-table th, .bill-table td { border: 1px solid #dee2e6; padding: 7px 10px; }
-        .bill-table thead th { background: #2b5876; color: white; font-weight: 700; }
-        .bill-table tfoot th { background: #f8f9fa; font-weight: 700; }
-        .bill-preview-wrap {
-            border: 1.5px solid #e0e4ee;
-            border-radius: 14px;
-            padding: 18px;
-            margin-top: 10px;
-            background: #fff;
-        }
-        .bill-preview-wrap h4 { font-size: 1rem; font-weight: 800; }
+/* ── HISTORY TABLE ── */
+.hist-table{width:100%;border-collapse:collapse;font-size:.85rem;}
+.hist-table th{text-align:left;padding:6px 10px;color:#888;font-size:.72rem;text-transform:uppercase;font-weight:700;border-bottom:1.5px solid #eee;}
+.hist-table td{padding:10px;border-bottom:1px solid #f0f0f0;vertical-align:middle;}
+.hist-table tr:last-child td{border-bottom:none;}
+.badge{background:rgba(78,67,118,.1);color:#4e4376;padding:3px 9px;border-radius:20px;font-size:.75rem;font-weight:700;}
+.amt-cell{font-weight:700;text-align:right;}
 
-        /* ── BOTTOM NAV ── */
-        .nav-bottom {
-            position: fixed;
-            bottom: 0; left: 0; width: 100%;
-            background: white;
-            box-shadow: 0 -2px 16px rgba(0,0,0,0.1);
-            z-index: 1000;
-            display: flex;
-            justify-content: space-around;
-            padding: 8px 0 6px;
-        }
-        .nav-item {
-            text-align: center;
-            color: #aaa;
-            font-size: 0.72rem;
-            font-weight: 600;
-            cursor: pointer;
-            padding: 4px 16px;
-            border-radius: 12px;
-            transition: all 0.2s;
-        }
-        .nav-item.active { color: #4e4376; }
-        .nav-item i { font-size: 1.3rem; display: block; margin-bottom: 2px; }
-        .nav-item.active i {
-            background: linear-gradient(135deg, #2b5876, #4e4376);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+/* ── BILL PREVIEW ── */
+.bill-box{border:1.5px solid #e0e4ee;border-radius:14px;padding:16px;background:#fff;margin-top:2px;}
+.bill-box h3{text-align:center;font-size:1rem;font-weight:800;margin-bottom:2px;}
+.bill-box .sub{text-align:center;color:#888;font-size:.8rem;margin-bottom:12px;}
+.bill-tbl{width:100%;border-collapse:collapse;font-size:.82rem;}
+.bill-tbl th{background:#2b5876;color:#fff;padding:8px 9px;text-align:left;}
+.bill-tbl td{padding:7px 9px;border-bottom:1px solid #eee;}
+.bill-tbl tr:last-child td{border-bottom:none;}
+.bill-tbl .total-row td{background:#f4f6fb;font-weight:800;border-top:2px solid #2b5876;}
+.bill-tbl .total-row td:last-child{color:#2b5876;font-size:1rem;}
+.sig-row{display:flex;justify-content:space-between;margin-top:24px;padding:0 8px;}
+.sig-box{text-align:center;}
+.sig-line{width:110px;border-top:1.5px solid #555;margin:0 auto 5px;}
+.sig-lbl{font-size:.72rem;color:#666;}
 
-        /* ── POWERED BY ── */
-        .powered-by {
-            position: fixed;
-            bottom: 60px; width: 100%;
-            text-align: center;
-            background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
-            color: rgba(255,255,255,0.9);
-            padding: 5px 0;
-            font-size: 0.72rem;
-            font-weight: 600;
-            z-index: 999;
-            letter-spacing: 0.3px;
-        }
-        .powered-by strong { color: #ffd700; }
-        .heart-icon { color: #ff4757; display: inline-block; animation: heartbeat 1.4s infinite; }
-        @keyframes heartbeat { 0%,100% { transform: scale(1); } 50% { transform: scale(1.25); } }
+/* ── TEXT BILL (monospace) ── */
+.monobill{background:#1e1e2e;color:#d4d4d4;font-family:'Courier New',Courier,monospace;font-size:.72rem;padding:14px;border-radius:12px;white-space:pre;overflow:auto;max-height:280px;line-height:1.6;margin-top:10px;}
 
-        /* ── DANGER ZONE ── */
-        .danger-zone {
-            border: 1.5px solid #dc3545;
-            background: #fff8f8;
-            padding: 18px;
-            border-radius: 14px;
-            margin-top: 18px;
-        }
-        .danger-zone h6 { font-weight: 800; }
+/* ── BOTTOM NAV ── */
+.nav{position:fixed;bottom:0;left:0;width:100%;background:#fff;box-shadow:0 -2px 12px rgba(0,0,0,.1);display:flex;justify-content:space-around;padding:8px 0 6px;z-index:900;}
+.nav-btn{flex:1;text-align:center;padding:4px 0;cursor:pointer;border:none;background:transparent;color:#aaa;font-size:.68rem;font-weight:700;}
+.nav-btn .ico{font-size:1.4rem;display:block;margin-bottom:1px;}
+.nav-btn.on{color:#4e4376;}
 
-        /* ── TOAST ── */
-        .toast-popup {
-            position: fixed;
-            bottom: 80px; left: 50%;
-            transform: translateX(-50%);
-            background: #1e1e2e;
-            color: #fff;
-            padding: 11px 24px;
-            border-radius: 50px;
-            z-index: 9999;
-            font-size: 0.88rem;
-            font-weight: 600;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-            animation: fadeInUp 0.25s ease;
-            white-space: nowrap;
-        }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateX(-50%) translateY(12px); }
-            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
-        }
+/* ── POWERED BY ── */
+.pwrby{position:fixed;bottom:60px;width:100%;text-align:center;background:linear-gradient(135deg,#2b5876,#4e4376);color:rgba(255,255,255,.85);padding:5px;font-size:.7rem;font-weight:600;z-index:899;}
+.pwrby b{color:#ffd700;}
+@keyframes hb{0%,100%{transform:scale(1);}50%{transform:scale(1.3);}}
+.hrt{display:inline-block;color:#ff4757;animation:hb 1.4s infinite;}
 
-        /* ── CONFIRM MODAL ── */
-        .modal-content { border-radius: 20px; border: none; }
-        .modal-header { border-bottom: none; padding-bottom: 0; }
-        .modal-footer { border-top: none; padding-top: 8px; }
+/* ── DANGER ZONE ── */
+.danger-zone{border:1.5px solid #e74c3c;background:#fff8f8;border-radius:14px;padding:16px;margin-top:16px;}
+hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
 
-        /* ── MISC ── */
-        .list-group-item { border-color: #f0f0f0; font-size: 0.92rem; }
-        .text-rupee { font-family: 'Nunito', sans-serif; }
-        .date-small { font-size: 0.78rem; color: #888; }
+/* ── OVERLAY MODAL ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;padding:16px;}
+.overlay.show{display:flex;}
+.modal-box{background:#fff;border-radius:20px;width:100%;max-width:420px;padding:22px;box-shadow:0 8px 40px rgba(0,0,0,.25);max-height:90vh;overflow-y:auto;}
+.modal-box h4{font-weight:800;margin-bottom:8px;}
+.modal-actions{display:flex;gap:10px;margin-top:16px;}
+.modal-actions .btn{flex:1;padding:11px;}
 
-        /* ══════════════════════════════════════════
-           PRINT STYLES — "Save as PDF" via browser
-           ══════════════════════════════════════════ */
-        @media print {
-            /* Hide everything except the print bill */
-            body * { visibility: hidden !important; }
-            #print-bill, #print-bill * { visibility: visible !important; }
-            #print-bill {
-                position: fixed !important;
-                top: 0 !important; left: 0 !important;
-                width: 100% !important;
-                padding: 0 !important;
-                margin: 0 !important;
-            }
-            @page {
-                size: A4 portrait;
-                margin: 12mm 14mm;
-            }
-        }
-    </style>
+/* ── TOAST ── */
+.toast{position:fixed;bottom:75px;left:50%;transform:translateX(-50%);background:#1e1e2e;color:#fff;padding:10px 22px;border-radius:50px;font-size:.85rem;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.3);z-index:2000;white-space:nowrap;pointer-events:none;transition:opacity .4s;}
+
+/* ── LIST ── */
+.seller-list{list-style:none;margin-top:8px;}
+.seller-list li{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid #f0f0f0;font-size:.9rem;}
+.seller-list li:last-child{border-bottom:none;}
+.input-row{display:flex;gap:8px;align-items:flex-end;}
+.input-row input{flex:1;}
+.input-row .btn{width:auto;padding:11px 18px;border-radius:50px;}
+
+/* ── HELPER ── */
+.hint{font-size:.72rem;color:#888;text-align:center;margin-top:8px;line-height:1.5;}
+.mt8{margin-top:8px;}
+</style>
 </head>
 <body>
 
-<!-- ══════════ HEADER ══════════ -->
-<div class="header-bg text-center">
-    <h3><i class="fas fa-mug-hot me-2"></i><span id="appTitle">Tea Tracker</span></h3>
-    <p id="displayManagerName">Manager: Loading...</p>
+<!-- HEADER -->
+<div class="hdr">
+  <h2>☕ <span id="appTitle">Tea Tracker</span></h2>
+  <p id="hdrMgr">Manager: ...</p>
 </div>
 
-<div class="container px-3">
+<div class="wrap">
 
-    <!-- ══════════ VIEW 1: ADD ══════════ -->
-    <div id="view-add" class="view-section">
-        <!-- Stats -->
-        <div class="stats-card">
-            <div>
-                <div class="label">Today's Total</div>
-                <div class="amount" id="todaySpending">Rs. 0.00</div>
-            </div>
-            <i class="fas fa-chart-line fa-2x" style="opacity:0.4"></i>
+  <!-- ═══ VIEW: ADD ═══ -->
+  <div id="view-add" class="view active">
+    <div class="stat-banner">
+      <div>
+        <div class="lbl">Today's Total</div>
+        <div class="amt" id="todayAmt">Rs. 0.00</div>
+      </div>
+      <span style="font-size:2rem;opacity:.35">📈</span>
+    </div>
+    <div class="card">
+      <div class="stitle">➕ New Purchase</div>
+      <form id="addForm">
+        <label class="lbl">Date & Time</label>
+        <input type="datetime-local" id="entryDate" required>
+        <label class="lbl">Tea Seller</label>
+        <select id="entrySeller" required></select>
+        <div class="row2" style="margin-top:10px;">
+          <div>
+            <label class="lbl">Cups</label>
+            <input type="number" id="entryCups" min="1" placeholder="0" required>
+          </div>
+          <div>
+            <label class="lbl">Cost (Rs.)</label>
+            <input type="number" id="entryCost" step="0.01" placeholder="0.00" required>
+          </div>
         </div>
+        <div class="mt8"></div>
+        <button type="submit" class="btn btn-primary">💾 Save Entry</button>
+      </form>
+    </div>
+  </div>
 
-        <div class="card p-4">
-            <div class="section-title"><i class="fas fa-plus-circle me-2"></i>New Purchase</div>
-            <form id="teaForm">
-                <div class="mb-3">
-                    <label class="form-label-sm">Date & Time</label>
-                    <input type="datetime-local" class="form-control" id="entryDate" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label-sm">Tea Seller</label>
-                    <select class="form-select" id="entrySeller" required></select>
-                </div>
-                <div class="row g-3 mb-3">
-                    <div class="col-6">
-                        <label class="form-label-sm">Cups</label>
-                        <input type="number" class="form-control" id="entryCups" min="1" placeholder="0" required>
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label-sm">Cost (Rs.)</label>
-                        <input type="number" class="form-control" id="entryCost" step="0.01" placeholder="0.00" required>
-                    </div>
-                </div>
-                <button type="submit" class="btn btn-primary w-100 btn-pill">
-                    <i class="fas fa-save me-2"></i>Save Entry
-                </button>
-            </form>
+  <!-- ═══ VIEW: HISTORY ═══ -->
+  <div id="view-history" class="view">
+    <div class="card">
+      <div class="stitle">📋 All Records</div>
+      <div style="overflow-x:auto;">
+        <table class="hist-table">
+          <thead><tr><th>Date / Time</th><th>Seller</th><th style="text-align:right">Cost</th></tr></thead>
+          <tbody id="histBody"><tr><td colspan="3" style="text-align:center;padding:24px;color:#aaa;">No records yet.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ VIEW: BILL ═══ -->
+  <div id="view-bill" class="view">
+    <div class="card">
+      <div class="stitle">🧾 Generate Bill</div>
+      <div class="row2">
+        <div>
+          <label class="lbl">From Date</label>
+          <input type="date" id="billFrom">
         </div>
+        <div>
+          <label class="lbl">To Date</label>
+          <input type="date" id="billTo">
+        </div>
+      </div>
+      <div class="mt8"></div>
+      <button class="btn btn-success" onclick="generateBill()">👁 View Bill Details</button>
     </div>
 
-    <!-- ══════════ VIEW 2: HISTORY ══════════ -->
-    <div id="view-history" class="view-section d-none">
-        <div class="card p-3">
-            <div class="section-title px-1"><i class="fas fa-list me-2"></i>All Records</div>
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Date / Time</th>
-                            <th>Seller</th>
-                            <th class="text-end">Cost</th>
-                        </tr>
-                    </thead>
-                    <tbody id="recordsTableBody">
-                        <tr><td colspan="3" class="text-center text-muted py-4">No records yet.</td></tr>
-                    </tbody>
-                </table>
-            </div>
+    <div id="billPreview" style="display:none;">
+      <div class="bill-box">
+        <h3 id="billTitle">Tea Expense Report</h3>
+        <div class="sub" id="billSub"></div>
+        <div style="overflow-x:auto;">
+          <table class="bill-tbl">
+            <thead><tr><th>Date & Time</th><th>Seller</th><th>Cups</th><th>Cost</th></tr></thead>
+            <tbody id="billBody"></tbody>
+            <tr class="total-row">
+              <td colspan="3" style="text-align:right;padding:8px 9px;">Grand Total</td>
+              <td id="billTotal" style="padding:8px 9px;">Rs. 0.00</td>
+            </tr>
+          </table>
         </div>
+        <div class="sig-row">
+          <div class="sig-box"><div class="sig-line"></div><div class="sig-lbl">Manager</div></div>
+          <div class="sig-box"><div class="sig-line"></div><div class="sig-lbl">Seller</div></div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-share" onclick="shareBill()">📤 Share Bill</button>
+        <button class="btn btn-copy" onclick="copyBill()">📋 Copy Text</button>
+      </div>
+      <p class="hint">Share to WhatsApp / Telegram / Gmail.<br>Or copy and paste anywhere.</p>
     </div>
+  </div>
 
-    <!-- ══════════ VIEW 3: BILL / REPORT ══════════ -->
-    <div id="view-report" class="view-section d-none">
-        <div class="card p-4">
-            <div class="section-title"><i class="fas fa-file-invoice me-2"></i>Generate Bill</div>
-            <label class="form-label-sm">Date Range</label>
-            <div class="row g-2 mb-3">
-                <div class="col-6">
-                    <label class="form-label-sm">From</label>
-                    <input type="date" class="form-control" id="reportStart">
-                </div>
-                <div class="col-6">
-                    <label class="form-label-sm">To</label>
-                    <input type="date" class="form-control" id="reportEnd">
-                </div>
-            </div>
-            <button class="btn btn-success w-100 btn-pill" onclick="generateReport()">
-                <i class="fas fa-eye me-2"></i>View Bill Details
-            </button>
+  <!-- ═══ VIEW: SETTINGS ═══ -->
+  <div id="view-settings" class="view">
+    <div class="card">
+      <div class="stitle">⚙️ Settings</div>
+      <label class="lbl">Office / Company Name</label>
+      <input type="text" id="setOfficeName" placeholder="e.g. ABC Office">
+      <label class="lbl">Manager Name</label>
+      <input type="text" id="setManager" placeholder="e.g. Rajesh Kumar">
+      <div class="mt8"></div>
+      <button class="btn btn-primary" onclick="saveSettings()">✅ Save Settings</button>
+
+      <div style="margin-top:20px;">
+        <div class="stitle" style="font-size:.9rem;">🧑‍🤝‍🧑 Tea Sellers</div>
+        <div class="input-row">
+          <input type="text" id="newSeller" placeholder="Seller name">
+          <button class="btn btn-primary" onclick="addSeller()">Add</button>
         </div>
+        <ul class="seller-list" id="sellerList"></ul>
+      </div>
 
-        <!-- Preview Area (hidden until report generated) -->
-        <div id="previewArea" class="d-none">
-            <div class="bill-preview-wrap">
-                <h4 class="text-center mb-0" id="previewTitle">Tea Expense Report</h4>
-                <p class="text-center text-muted small mb-1" id="previewManager"></p>
-                <p class="text-center small fw-bold mb-3" id="previewDateRange"></p>
-
-                <div class="table-responsive">
-                    <table class="bill-table">
-                        <thead>
-                            <tr>
-                                <th>Date & Time</th>
-                                <th>Seller</th>
-                                <th>Cups</th>
-                                <th>Cost</th>
-                            </tr>
-                        </thead>
-                        <tbody id="previewTableBody"></tbody>
-                        <tfoot>
-                            <tr>
-                                <th colspan="3" class="text-end">Grand Total</th>
-                                <th id="previewTotal">Rs. 0.00</th>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-
-                <div class="d-flex justify-content-between mt-4 px-2">
-                    <div class="text-center">
-                        <div style="border-top:1.5px solid #333;width:100px;margin-bottom:4px;"></div>
-                        <small class="text-muted">Manager Signature</small>
-                    </div>
-                    <div class="text-center">
-                        <div style="border-top:1.5px solid #333;width:100px;margin-bottom:4px;"></div>
-                        <small class="text-muted">Seller Signature</small>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Download Button -->
-            <button id="printBtn" class="btn btn-dark w-100 btn-pill mt-3" onclick="printBill()">
-                <i class="fas fa-file-pdf me-2"></i>Open Bill &amp; Save as PDF
-            </button>
-            <p class="text-center text-muted mt-2" style="font-size:0.75rem;">
-                <i class="fas fa-info-circle me-1"></i>Opens bill in browser → tap <strong>Save as PDF</strong>.
-            </p>
+      <div class="danger-zone">
+        <div class="stitle" style="color:#e74c3c;font-size:.95rem;">🗑️ Clear Records</div>
+        <p style="font-size:.8rem;color:#888;margin-bottom:12px;">Remove settled/paid records. Cannot be undone.</p>
+        <div class="row2">
+          <div><label class="lbl">From</label><input type="date" id="clrFrom"></div>
+          <div><label class="lbl">To</label><input type="date" id="clrTo"></div>
         </div>
+        <div class="mt8"></div>
+        <button class="btn btn-outline-danger" onclick="askClearRange()">🗓️ Clear Selected Period</button>
+        <hr class="dhr">
+        <button class="btn btn-danger" onclick="askClearAll()">⚠️ Clear ALL Records</button>
+      </div>
     </div>
+  </div>
 
-    <!-- ══════════ VIEW 4: SETTINGS ══════════ -->
-    <div id="view-settings" class="view-section d-none">
-        <div class="card p-4">
-            <div class="section-title"><i class="fas fa-cog me-2"></i>Settings</div>
+</div><!-- /wrap -->
 
-            <div class="mb-3">
-                <label class="form-label-sm">Office / Company Name</label>
-                <input type="text" class="form-control" id="officeNameInput" placeholder="e.g. ABC Office">
-            </div>
-            <div class="mb-3">
-                <label class="form-label-sm">Manager Name</label>
-                <input type="text" class="form-control" id="managerNameInput" placeholder="e.g. Rajesh Kumar">
-            </div>
+<!-- BOTTOM NAV -->
+<div class="nav">
+  <button class="nav-btn on" id="nb-add" onclick="nav('add')"><span class="ico">➕</span>Add</button>
+  <button class="nav-btn" id="nb-history" onclick="nav('history')"><span class="ico">📋</span>History</button>
+  <button class="nav-btn" id="nb-bill" onclick="nav('bill')"><span class="ico">🧾</span>Bill</button>
+  <button class="nav-btn" id="nb-settings" onclick="nav('settings')"><span class="ico">⚙️</span>Settings</button>
+</div>
+<div class="pwrby">Powered by <b>Piyuneel</b> <span class="hrt">❤</span></div>
 
-            <hr style="border-color:#eee;">
-            <div class="section-title" style="font-size:0.9rem;">
-                <i class="fas fa-users me-2"></i>Tea Sellers
-            </div>
-
-            <div class="input-group mb-3">
-                <input type="text" class="form-control" id="newSellerName" placeholder="Add seller name">
-                <button class="btn btn-outline-primary" onclick="addSeller()">
-                    <i class="fas fa-plus"></i>
-                </button>
-            </div>
-            <ul class="list-group mb-3" id="sellersList"></ul>
-
-            <button class="btn btn-primary w-100 btn-pill" onclick="saveSettings()">
-                <i class="fas fa-check me-2"></i>Save Settings
-            </button>
-
-            <!-- DANGER ZONE -->
-            <div class="danger-zone">
-                <h6 class="text-danger mb-1">
-                    <i class="fas fa-trash-alt me-2"></i>Clear Records
-                </h6>
-                <p class="text-muted small mb-3">
-                    After a bill is paid, use this to remove settled records. <strong>Cannot be undone.</strong>
-                </p>
-
-                <label class="form-label-sm">Clear Paid Period</label>
-                <div class="row g-2 mb-3">
-                    <div class="col-6">
-                        <label class="form-label-sm">From</label>
-                        <input type="date" class="form-control form-control-sm" id="clearStart">
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label-sm">To</label>
-                        <input type="date" class="form-control form-control-sm" id="clearEnd">
-                    </div>
-                </div>
-                <button class="btn btn-outline-danger w-100 btn-pill mb-3" onclick="confirmClearRange()">
-                    <i class="fas fa-calendar-times me-2"></i>Clear Selected Period
-                </button>
-
-                <hr style="border-color:#f5c6cb;">
-
-                <button class="btn btn-danger w-100 btn-pill" onclick="confirmClearAll()">
-                    <i class="fas fa-exclamation-triangle me-2"></i>Clear ALL Records
-                </button>
-            </div>
-        </div>
+<!-- ═══ CONFIRM MODAL ═══ -->
+<div class="overlay" id="confirmOverlay">
+  <div class="modal-box">
+    <h4 style="color:#e74c3c;">⚠️ Confirm Delete</h4>
+    <p id="confirmMsg" style="color:#444;font-size:.9rem;line-height:1.5;"></p>
+    <p style="color:#e74c3c;font-size:.8rem;font-weight:700;margin-top:8px;">This action cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn btn-grey" onclick="closeModal('confirmOverlay')">Cancel</button>
+      <button class="btn btn-danger" id="confirmOkBtn">Yes, Delete</button>
     </div>
-
-</div><!-- /container -->
-
-
-<!-- ══════════ PRINT-ONLY BILL (hidden on screen) ══════════ -->
-<div id="print-bill" style="display:none; font-family:Arial,sans-serif; font-size:12px; color:#111;">
-    <!-- filled dynamically by printBill() -->
+  </div>
 </div>
 
-<!-- ══════════ CONFIRM MODAL ══════════ -->
-<div class="modal fade" id="confirmModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered mx-3">
-        <div class="modal-content">
-            <div class="modal-header pb-0">
-                <h5 class="modal-title text-danger">
-                    <i class="fas fa-trash-alt me-2"></i>Confirm Delete
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p id="confirmModalMsg" class="mb-2"></p>
-                <p class="text-danger small fw-bold mb-0">
-                    <i class="fas fa-exclamation-circle me-1"></i>This action cannot be undone.
-                </p>
-            </div>
-            <div class="modal-footer pt-0">
-                <button class="btn btn-secondary btn-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                <button class="btn btn-danger btn-pill px-4" id="confirmModalBtn">Yes, Delete</button>
-            </div>
-        </div>
+<!-- ═══ BILL TEXT MODAL (copy fallback) ═══ -->
+<div class="overlay" id="billTextOverlay">
+  <div class="modal-box">
+    <h4>📄 Bill Text</h4>
+    <p style="font-size:.8rem;color:#888;">Long-press and select all to copy:</p>
+    <div class="monobill" id="billTextBox"></div>
+    <div class="modal-actions">
+      <button class="btn btn-grey" onclick="closeModal('billTextOverlay')">Close</button>
+      <button class="btn btn-copy" onclick="copyFromModal()">📋 Copy</button>
     </div>
+  </div>
 </div>
-
-<!-- ══════════ BOTTOM NAV ══════════ -->
-<div class="nav-bottom">
-    <div class="nav-item active" onclick="switchView('add', this)">
-        <i class="fas fa-plus-circle"></i>Add
-    </div>
-    <div class="nav-item" onclick="switchView('history', this)">
-        <i class="fas fa-list-ul"></i>History
-    </div>
-    <div class="nav-item" onclick="switchView('report', this)">
-        <i class="fas fa-file-invoice"></i>Bill
-    </div>
-    <div class="nav-item" onclick="switchView('settings', this)">
-        <i class="fas fa-cog"></i>Settings
-    </div>
-</div>
-
-<!-- ══════════ POWERED BY ══════════ -->
-<div class="powered-by">
-    Powered by <strong>Piyuneel</strong>&nbsp;<span class="heart-icon">❤</span>
-</div>
-
-<!-- ══════════ SCRIPTS ══════════ -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 
 <script>
-/* ════════════════════════════════════════════════════
-   APP STATE
-   ════════════════════════════════════════════════════ */
-let appData = {
-    officeName : "Tea Tracker",
-    manager    : "Office Manager",
-    sellers    : ["Canteen", "Street Vendor"],
-    records    : []
+/* ════════════════════════════
+   STATE
+════════════════════════════ */
+var app = {
+  officeName: 'Tea Tracker',
+  manager:    'Office Manager',
+  sellers:    ['Canteen', 'Street Vendor'],
+  records:    []
 };
+var rptData  = [];
+var rptTotal = 0;
+var rptRange = '';
+var pendingConfirm = null;
 
-// These three are set by generateReport() and consumed by downloadPDF()
-let currentReportData  = [];
-let currentReportTotal = 0;
-let currentReportRange = "";
+/* All previous localStorage keys — so data is never lost after updates */
+var ALL_KEYS = ['teaAppData_v3','teaAppData_vFinal','teaAppData_vDebug','teaAppData'];
+var SAVE_KEY = 'teaAppData_v3';
 
-let pendingClearAction = null; // For the confirm modal
-
-/* ════════════════════════════════════════════════════
+/* ════════════════════════════
    INIT
-   ════════════════════════════════════════════════════ */
-window.onload = function () {
-    loadData();
+════════════════════════════ */
+window.onload = function() {
+  loadData();
 
-    // Default datetime-local to now
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    document.getElementById('entryDate').value = now.toISOString().slice(0, 16);
+  /* Set datetime default */
+  var now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  document.getElementById('entryDate').value = now.toISOString().slice(0,16);
 
-    // Default date pickers to today
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('reportStart').value = today;
-    document.getElementById('reportEnd').value   = today;
-    document.getElementById('clearStart').value  = today;
-    document.getElementById('clearEnd').value    = today;
+  /* Set date defaults */
+  var today = new Date().toISOString().split('T')[0];
+  document.getElementById('billFrom').value = today;
+  document.getElementById('billTo').value   = today;
+  document.getElementById('clrFrom').value  = today;
+  document.getElementById('clrTo').value    = today;
 
-    // Wire confirm modal button
-    document.getElementById('confirmModalBtn').addEventListener('click', function () {
-        if (pendingClearAction) {
-            pendingClearAction();
-            pendingClearAction = null;
-        }
-    });
+  /* Confirm button */
+  document.getElementById('confirmOkBtn').onclick = function() {
+    if (pendingConfirm) { pendingConfirm(); pendingConfirm = null; }
+    closeModal('confirmOverlay');
+  };
+
+  /* Close overlay on background tap */
+  document.getElementById('confirmOverlay').onclick = function(e){ if(e.target===this) closeModal('confirmOverlay'); };
+  document.getElementById('billTextOverlay').onclick = function(e){ if(e.target===this) closeModal('billTextOverlay'); };
+
+  /* Form submit */
+  document.getElementById('addForm').onsubmit = function(e) {
+    e.preventDefault();
+    var rec = {
+      id:       Date.now(),
+      datetime: document.getElementById('entryDate').value,
+      seller:   document.getElementById('entrySeller').value,
+      cups:     parseInt(document.getElementById('entryCups').value) || 0,
+      cost:     parseFloat(document.getElementById('entryCost').value) || 0
+    };
+    if (!rec.datetime || !rec.seller) { toast('⚠️ Please fill all fields'); return; }
+    app.records.push(rec);
+    app.records.sort(function(a,b){ return new Date(b.datetime)-new Date(a.datetime); });
+    save();
+    toast('✅ Entry saved!');
+    this.reset();
+    var now2 = new Date();
+    now2.setMinutes(now2.getMinutes()-now2.getTimezoneOffset());
+    document.getElementById('entryDate').value = now2.toISOString().slice(0,16);
+  };
 };
 
-/* ════════════════════════════════════════════════════
-   DATA — LOAD / SAVE
-   ════════════════════════════════════════════════════ */
+/* ════════════════════════════
+   DATA
+════════════════════════════ */
 function loadData() {
-    const stored = localStorage.getItem('teaAppData_v3');
-    if (stored) {
-        try { appData = JSON.parse(stored); } catch (e) { /* corrupted, use defaults */ }
+  for (var i = 0; i < ALL_KEYS.length; i++) {
+    var raw = localStorage.getItem(ALL_KEYS[i]);
+    if (raw) {
+      try {
+        var parsed = JSON.parse(raw);
+        /* Ensure all expected fields exist */
+        app.officeName = parsed.officeName || app.officeName;
+        app.manager    = parsed.manager    || app.manager;
+        app.sellers    = parsed.sellers    || app.sellers;
+        app.records    = parsed.records    || app.records;
+        /* Migrate to current key */
+        if (ALL_KEYS[i] !== SAVE_KEY) localStorage.setItem(SAVE_KEY, JSON.stringify(app));
+        break;
+      } catch(ex) { /* corrupt, skip */ }
     }
-    // Sync UI
-    document.getElementById('appTitle').innerText          = appData.officeName;
-    document.getElementById('displayManagerName').innerText = "Manager: " + appData.manager;
-    document.getElementById('officeNameInput').value       = appData.officeName;
-    document.getElementById('managerNameInput').value      = appData.manager;
-    document.getElementById('previewManager').innerText    = appData.manager;
-    document.getElementById('previewTitle').innerText      = appData.officeName + " — Tea Expense Report";
-
-    renderDropdowns();
-    renderSettingsList();
-    loadHistory();
-    updateStats();
+  }
+  syncUI();
 }
 
-function saveData() {
-    localStorage.setItem('teaAppData_v3', JSON.stringify(appData));
-    updateStats();
+function save() {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(app)); } catch(ex) { toast('⚠️ Storage error!'); }
+  updateStats();
 }
 
-/* ════════════════════════════════════════════════════
+function syncUI() {
+  document.getElementById('appTitle').textContent = app.officeName;
+  document.getElementById('hdrMgr').textContent   = 'Manager: ' + app.manager;
+  document.getElementById('setOfficeName').value  = app.officeName;
+  document.getElementById('setManager').value     = app.manager;
+  renderSellers();
+  renderHistory();
+  updateStats();
+}
+
+/* ════════════════════════════
    NAVIGATION
-   ════════════════════════════════════════════════════ */
-function switchView(viewName, navEl) {
-    document.querySelectorAll('.view-section').forEach(el => el.classList.add('d-none'));
-    document.getElementById('view-' + viewName).classList.remove('d-none');
-    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    if (navEl) navEl.classList.add('active');
-    if (viewName === 'history') loadHistory();
+════════════════════════════ */
+function nav(v) {
+  var views = ['add','history','bill','settings'];
+  for (var i=0;i<views.length;i++) {
+    document.getElementById('view-'+views[i]).classList.remove('active');
+    document.getElementById('nb-'+views[i]).classList.remove('on');
+  }
+  document.getElementById('view-'+v).classList.add('active');
+  document.getElementById('nb-'+v).classList.add('on');
+  if (v==='history') renderHistory();
 }
 
-/* ════════════════════════════════════════════════════
-   ADD ENTRY
-   ════════════════════════════════════════════════════ */
-document.getElementById('teaForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-    const record = {
-        id      : Date.now(),
-        datetime: document.getElementById('entryDate').value,
-        seller  : document.getElementById('entrySeller').value,
-        cups    : parseInt(document.getElementById('entryCups').value),
-        cost    : parseFloat(document.getElementById('entryCost').value)
-    };
-    appData.records.push(record);
-    appData.records.sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
-    saveData();
-    showToast("✅ Entry saved!");
-    this.reset();
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    document.getElementById('entryDate').value = now.toISOString().slice(0, 16);
-});
-
+/* ════════════════════════════
+   STATS
+════════════════════════════ */
 function updateStats() {
-    const today = new Date().toISOString().split('T')[0];
-    let total = 0;
-    appData.records.forEach(r => { if (r.datetime.startsWith(today)) total += r.cost; });
-    document.getElementById('todaySpending').innerText = "Rs. " + total.toFixed(2);
+  var today = new Date().toISOString().split('T')[0];
+  var t = 0;
+  for (var i=0;i<app.records.length;i++) {
+    var r = app.records[i];
+    if (r.datetime && r.datetime.split('T')[0] === today) t += parseFloat(r.cost)||0;
+  }
+  document.getElementById('todayAmt').textContent = 'Rs. ' + t.toFixed(2);
 }
 
-/* ════════════════════════════════════════════════════
+/* ════════════════════════════
    HISTORY
-   ════════════════════════════════════════════════════ */
-function loadHistory() {
-    const tb = document.getElementById('recordsTableBody');
-    if (appData.records.length === 0) {
-        tb.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-4"><i class="fas fa-inbox fa-2x d-block mb-2" style="opacity:0.3"></i>No records yet.</td></tr>';
-        return;
-    }
-    tb.innerHTML = '';
-    appData.records.forEach(r => {
-        const d = new Date(r.datetime);
-        const dateStr = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
-        const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        tb.innerHTML += `
-            <tr>
-                <td>
-                    <div style="font-weight:600">${dateStr}</div>
-                    <div class="date-small">${timeStr}</div>
-                </td>
-                <td><span class="seller-badge">${r.seller}</span></td>
-                <td class="text-end fw-700" style="font-weight:700">Rs.${r.cost.toFixed(2)}</td>
-            </tr>`;
-    });
+════════════════════════════ */
+function renderHistory() {
+  var tb = document.getElementById('histBody');
+  if (!app.records || app.records.length === 0) {
+    tb.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:24px;color:#aaa;">No records yet.</td></tr>';
+    return;
+  }
+  var html = '';
+  for (var i=0;i<app.records.length;i++) {
+    var r  = app.records[i];
+    var d  = new Date(r.datetime);
+    var ds = isNaN(d)?r.datetime:d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
+    var ts = isNaN(d)?'':d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    html += '<tr>'
+      +'<td><b>'+ds+'</b><br><span style="font-size:.75rem;color:#888">'+ts+'</span></td>'
+      +'<td><span class="badge">'+r.seller+'</span></td>'
+      +'<td class="amt-cell">Rs.'+parseFloat(r.cost).toFixed(2)+'</td>'
+      +'</tr>';
+  }
+  tb.innerHTML = html;
 }
 
-/* ════════════════════════════════════════════════════
+/* ════════════════════════════
    SELLERS
-   ════════════════════════════════════════════════════ */
-function renderDropdowns() {
-    const sel = document.getElementById('entrySeller');
-    sel.innerHTML = '';
-    appData.sellers.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s; opt.text = s;
-        sel.appendChild(opt);
-    });
-}
-
-function renderSettingsList() {
-    const ul = document.getElementById('sellersList');
-    ul.innerHTML = '';
-    if (appData.sellers.length === 0) {
-        ul.innerHTML = '<li class="list-group-item text-muted text-center small">No sellers added yet.</li>';
-        return;
-    }
-    appData.sellers.forEach((s, i) => {
-        ul.innerHTML += `
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span><i class="fas fa-store me-2" style="color:#4e4376;opacity:0.6"></i>${s}</span>
-                <button class="btn btn-sm btn-outline-danger btn-pill px-3" onclick="removeSeller(${i})">
-                    <i class="fas fa-times"></i>
-                </button>
-            </li>`;
-    });
+════════════════════════════ */
+function renderSellers() {
+  /* Dropdown */
+  var sel = document.getElementById('entrySeller');
+  sel.innerHTML = '';
+  for (var i=0;i<app.sellers.length;i++) {
+    var o = document.createElement('option');
+    o.value = o.text = app.sellers[i];
+    sel.appendChild(o);
+  }
+  /* Settings list */
+  var ul = document.getElementById('sellerList');
+  if (!app.sellers || app.sellers.length===0) {
+    ul.innerHTML='<li style="color:#aaa;font-size:.85rem;padding:10px 0;">No sellers yet.</li>';
+    return;
+  }
+  var h='';
+  for (var j=0;j<app.sellers.length;j++) {
+    h+='<li><span>'+app.sellers[j]+'</span>'
+     +'<button class="btn btn-outline-danger btn-sm" onclick="removeSeller('+j+')">✕ Remove</button></li>';
+  }
+  ul.innerHTML = h;
 }
 
 function addSeller() {
-    const v = document.getElementById('newSellerName').value.trim();
-    if (!v) return;
-    if (appData.sellers.includes(v)) { showToast("⚠️ Seller already exists!"); return; }
-    appData.sellers.push(v);
-    document.getElementById('newSellerName').value = '';
-    renderDropdowns();
-    renderSettingsList();
-    showToast("✅ Seller added!");
+  var v = document.getElementById('newSeller').value.trim();
+  if (!v) return;
+  for (var i=0;i<app.sellers.length;i++) { if(app.sellers[i]===v){toast('⚠️ Already exists!');return;} }
+  app.sellers.push(v);
+  document.getElementById('newSeller').value='';
+  renderSellers();
+  toast('✅ Seller added!');
 }
 
 function removeSeller(i) {
-    appData.sellers.splice(i, 1);
-    renderDropdowns();
-    renderSettingsList();
+  app.sellers.splice(i,1);
+  renderSellers();
 }
 
 function saveSettings() {
-    appData.officeName = document.getElementById('officeNameInput').value.trim() || "Tea Tracker";
-    appData.manager    = document.getElementById('managerNameInput').value.trim() || "Office Manager";
-    saveData();
-    // Re-sync header and bill preview labels
-    document.getElementById('appTitle').innerText          = appData.officeName;
-    document.getElementById('displayManagerName').innerText = "Manager: " + appData.manager;
-    document.getElementById('previewTitle').innerText      = appData.officeName + " — Tea Expense Report";
-    document.getElementById('previewManager').innerText    = appData.manager;
-    showToast("✅ Settings saved!");
-    switchView('add', document.querySelector('.nav-item'));
+  var n = document.getElementById('setOfficeName').value.trim();
+  var m = document.getElementById('setManager').value.trim();
+  app.officeName = n || 'Tea Tracker';
+  app.manager    = m || 'Office Manager';
+  save();
+  document.getElementById('appTitle').textContent = app.officeName;
+  document.getElementById('hdrMgr').textContent   = 'Manager: '+app.manager;
+  toast('✅ Settings saved!');
+  nav('add');
 }
 
-/* ════════════════════════════════════════════════════
-   REPORT — VIEW DETAILS
-   ════════════════════════════════════════════════════ */
-function generateReport() {
-    const start = document.getElementById('reportStart').value;
-    const end   = document.getElementById('reportEnd').value;
-    if (!start || !end) { showToast("⚠️ Please select a date range."); return; }
-    if (start > end)    { showToast("⚠️ Start date must be before end date."); return; }
+/* ════════════════════════════
+   GENERATE BILL (view on screen)
+════════════════════════════ */
+function generateBill() {
+  var from = document.getElementById('billFrom').value;
+  var to   = document.getElementById('billTo').value;
 
-    // Filter + sort ascending for the bill display
-    currentReportData = appData.records
-        .filter(r => { const d = r.datetime.split('T')[0]; return d >= start && d <= end; })
-        .sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
+  if (!from || !to) { toast('⚠️ Please select From and To dates'); return; }
+  if (from > to)    { toast('⚠️ From must be before To date');     return; }
 
-    if (currentReportData.length === 0) {
-        showToast("⚠️ No records found for this range.");
-        document.getElementById('previewArea').classList.add('d-none');
-        return;
-    }
+  rptData = [];
+  for (var i=0;i<app.records.length;i++) {
+    var r = app.records[i];
+    var d = r.datetime ? r.datetime.split('T')[0] : '';
+    if (d >= from && d <= to) rptData.push(r);
+  }
+  rptData.sort(function(a,b){return new Date(a.datetime)-new Date(b.datetime);});
 
-    // Build preview table
-    currentReportTotal = 0;
-    const tb = document.getElementById('previewTableBody');
-    tb.innerHTML = '';
+  if (rptData.length === 0) {
+    toast('⚠️ No records found for this period');
+    document.getElementById('billPreview').style.display='none';
+    return;
+  }
 
-    currentReportData.forEach(r => {
-        currentReportTotal += r.cost;
-        const d = new Date(r.datetime);
-        tb.innerHTML += `
-            <tr>
-                <td>${r.datetime.split('T')[0]}<br><small style="color:#888">${d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</small></td>
-                <td>${r.seller}</td>
-                <td>${r.cups}</td>
-                <td>Rs.${r.cost.toFixed(2)}</td>
-            </tr>`;
-    });
+  rptTotal = 0;
+  var rows = '';
+  for (var j=0;j<rptData.length;j++) {
+    var r2 = rptData[j];
+    var d2 = new Date(r2.datetime);
+    var cost = parseFloat(r2.cost);
+    rptTotal += cost;
+    rows += '<tr>'
+      +'<td>'+r2.datetime.split('T')[0]+'<br><span style="font-size:.75rem;color:#888">'
+      +(isNaN(d2)?'':d2.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}))+'</span></td>'
+      +'<td>'+r2.seller+'</td>'
+      +'<td style="text-align:center">'+r2.cups+'</td>'
+      +'<td>Rs.'+cost.toFixed(2)+'</td>'
+      +'</tr>';
+  }
 
-    currentReportRange = `${start}  to  ${end}`;
-    document.getElementById('previewDateRange').innerText = `Period: ${currentReportRange}`;
-    document.getElementById('previewTotal').innerText     = "Rs. " + currentReportTotal.toFixed(2);
+  rptRange = from + ' to ' + to;
 
-    document.getElementById('previewArea').classList.remove('d-none');
-    document.getElementById('previewArea').scrollIntoView({ behavior: 'smooth' });
+  document.getElementById('billTitle').textContent = app.officeName+' — Tea Expense Report';
+  document.getElementById('billSub').textContent   = 'Manager: '+app.manager+'   |   Period: '+rptRange;
+  document.getElementById('billBody').innerHTML    = rows;
+  document.getElementById('billTotal').textContent = 'Rs. '+rptTotal.toFixed(2);
+  document.getElementById('billPreview').style.display = 'block';
+
+  setTimeout(function(){
+    document.getElementById('billPreview').scrollIntoView({behavior:'smooth',block:'start'});
+  },100);
 }
 
-/* ════════════════════════════════════════════════════
-   PRINT / SAVE AS PDF
-   ════════════════════════════════════════════════════
-   Uses window.print() — the browser's native print system.
-   On Android: Print dialog → "Save as PDF" in the printer list.
-   Works in ALL browsers and WebView APKs without any library.
-   ════════════════════════════════════════════════════ */
-function printBill() {
-    if (!currentReportData || currentReportData.length === 0) {
-        showToast("⚠️ Please tap 'View Bill Details' first.");
-        return;
-    }
-
-    // ── Build table rows ──
-    let rowsHtml = '';
-    for (let i = 0; i < currentReportData.length; i++) {
-        const r = currentReportData[i];
-        const d = new Date(r.datetime);
-        const bg = i % 2 === 0 ? '#ffffff' : '#f5f7ff';
-        rowsHtml += '<tr style="background:' + bg + '">'
-            + '<td style="padding:8px 10px;border:1px solid #ddd;">' + r.datetime.split('T')[0]
-            + '<br><span style="font-size:10px;color:#888">' + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) + '</span></td>'
-            + '<td style="padding:8px 10px;border:1px solid #ddd;">' + r.seller + '</td>'
-            + '<td style="padding:8px 10px;border:1px solid #ddd;text-align:center;">' + r.cups + '</td>'
-            + '<td style="padding:8px 10px;border:1px solid #ddd;text-align:right;font-weight:600;">Rs. ' + parseFloat(r.cost).toFixed(2) + '</td>'
-            + '</tr>';
-    }
-
-    // ── Build a COMPLETE standalone HTML page ──
-    // Opening this page in a new window works in WebView APKs because
-    // window.open() is handled by the SYSTEM BROWSER (Chrome), not the WebView.
-    // Chrome's print dialog has "Save as PDF" built-in — no library needed.
-    const billPage = '<!DOCTYPE html><html><head>'
-        + '<meta charset="UTF-8">'
-        + '<meta name="viewport" content="width=device-width,initial-scale=1">'
-        + '<title>Tea Bill — ' + appData.officeName + '</title>'
-        + '<style>'
-        + 'body{margin:0;padding:0;font-family:Arial,sans-serif;background:#f0f2f5;}'
-        + '.page{max-width:720px;margin:0 auto;background:#fff;box-shadow:0 0 20px rgba(0,0,0,0.12);}'
-        + '.header{background:linear-gradient(135deg,#2b5876,#4e4376);color:#fff;padding:22px 28px;text-align:center;}'
-        + '.header h1{margin:0;font-size:22px;font-weight:900;}'
-        + '.header p{margin:5px 0 0;font-size:13px;opacity:0.88;}'
-        + '.meta{display:flex;justify-content:space-between;background:#f4f6fb;padding:12px 24px;border-bottom:1px solid #dde2ee;font-size:12px;}'
-        + '.meta strong{display:block;font-size:14px;margin-top:2px;}'
-        + '.meta span{font-size:10px;text-transform:uppercase;color:#888;letter-spacing:.5px;}'
-        + 'table{width:100%;border-collapse:collapse;font-size:12px;}'
-        + 'thead tr{background:#2b5876;color:#fff;}'
-        + 'th{padding:10px 10px;text-align:left;border:1px solid #1e4060;}'
-        + 'th:last-child,td:last-child{text-align:right;}'
-        + 'th:nth-child(3),td:nth-child(3){text-align:center;}'
-        + '.total-row td{background:#2b5876;color:#fff;font-weight:900;font-size:13px;padding:10px;border:1px solid #1e4060;}'
-        + '.total-row td:first-child{text-align:right;font-size:12px;font-weight:700;}'
-        + '.sigs{display:flex;justify-content:space-around;padding:40px 20px 20px;}'
-        + '.sig-box{text-align:center;}'
-        + '.sig-line{width:150px;border-top:1.5px solid #444;margin:0 auto 6px;}'
-        + '.sig-label{font-size:11px;color:#555;}'
-        + '.footer{text-align:center;padding:16px;font-size:10px;color:#bbb;border-top:1px solid #eee;}'
-        + '.table-wrap{padding:16px 16px 0;}'
-        + '.save-btn{display:block;margin:20px auto;padding:14px 40px;background:linear-gradient(135deg,#2b5876,#4e4376);'
-        + 'color:#fff;border:none;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;'
-        + 'box-shadow:0 4px 14px rgba(78,67,118,0.4);letter-spacing:0.3px;}'
-        + '.save-btn:active{transform:scale(0.97);}'
-        + '.instructions{text-align:center;font-size:11px;color:#888;margin:0 0 20px;padding:0 16px;line-height:1.6;}'
-        + '@media print{'
-        + '.save-btn,.instructions{display:none!important;}'
-        + 'body{background:#fff;}'
-        + '.page{box-shadow:none;}'
-        + '@page{size:A4 portrait;margin:10mm 12mm;}'
-        + '}'
-        + '</style>'
-        + '</head><body>'
-        + '<div class="page">'
-        + '<div class="header">'
-        + '<h1>&#9749; ' + appData.officeName + '</h1>'
-        + '<p>Tea Expense Report</p>'
-        + '</div>'
-        + '<div class="meta">'
-        + '<div><span>Manager</span><strong>' + appData.manager + '</strong></div>'
-        + '<div style="text-align:right"><span>Period</span><strong>' + currentReportRange + '</strong></div>'
-        + '</div>'
-        + '<div class="table-wrap">'
-        + '<table><thead><tr>'
-        + '<th>Date &amp; Time</th><th>Seller</th><th>Cups</th><th>Cost</th>'
-        + '</tr></thead>'
-        + '<tbody>' + rowsHtml + '</tbody>'
-        + '<tr class="total-row"><td colspan="3">Grand Total</td><td>Rs. ' + currentReportTotal.toFixed(2) + '</td></tr>'
-        + '</table>'
-        + '</div>'
-        + '<div class="sigs">'
-        + '<div class="sig-box"><div class="sig-line"></div><div class="sig-label">Manager Signature</div></div>'
-        + '<div class="sig-box"><div class="sig-line"></div><div class="sig-label">Seller Signature</div></div>'
-        + '</div>'
-        + '<div class="footer">Generated by Tea Tracker &nbsp;|&nbsp; Powered by Piyuneel &#10084;</div>'
-        + '<button class="save-btn" onclick="window.print()">&#128438; Save as PDF / Print</button>'
-        + '<p class="instructions">Tap the button above &rarr; select <strong>Save as PDF</strong> from the printer list.<br>Or use your browser menu &rarr; Print / Share.</p>'
-        + '</div>'
-        + '<script>window.onload=function(){setTimeout(function(){window.print();},800);};<\/script>'
-        + '</body></html>';
-
-    // ── Open the page ──
-    // Try window.open with document.write first (works in most WebViews + browsers)
-    const newWin = window.open('', '_blank');
-    if (newWin) {
-        newWin.document.open();
-        newWin.document.write(billPage);
-        newWin.document.close();
-    } else {
-        // Fallback: open as blob URL (if popup blocked)
-        try {
-            const blob = new Blob([billPage], { type: 'text/html' });
-            const url  = URL.createObjectURL(blob);
-            window.open(url, '_blank');
-            setTimeout(() => URL.revokeObjectURL(url), 15000);
-        } catch (e) {
-            showToast("⚠️ Popup blocked. Please allow popups for this app.");
-        }
-    }
+/* ════════════════════════════
+   BUILD PLAIN TEXT BILL
+   Shareable to any app
+════════════════════════════ */
+function buildTextBill() {
+  var sep = '------------------------------------';
+  var t   = '';
+  t += 'TEA EXPENSE REPORT\n';
+  t += app.officeName + '\n';
+  t += sep + '\n';
+  t += 'Manager : ' + app.manager + '\n';
+  t += 'Period  : ' + rptRange    + '\n';
+  t += sep + '\n';
+  t += 'No  Date        Time   Seller      Cups  Cost\n';
+  t += sep + '\n';
+  for (var i=0;i<rptData.length;i++) {
+    var r  = rptData[i];
+    var d  = new Date(r.datetime);
+    var dt = r.datetime.split('T')[0];
+    var tm = isNaN(d)?'--:--':d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    var sl = (r.seller||'').substring(0,10);
+    var n  = (''+(i+1)).padStart(2,'0');
+    t += n+'  '+dt+'  '+tm+'  '
+       +sl.padEnd(10)+'  '
+       +(''+r.cups).padStart(4)+'  '
+       +('Rs.'+parseFloat(r.cost).toFixed(2)).padStart(9)+'\n';
+  }
+  t += sep + '\n';
+  t += '              TOTAL  :  Rs.'+rptTotal.toFixed(2)+'\n';
+  t += sep + '\n';
+  t += '\nManager Signature: ____________\n';
+  t += 'Seller Signature : ____________\n';
+  t += '\nGenerated by Tea Tracker | Piyuneel';
+  return t;
 }
 
+/* ════════════════════════════
+   SHARE  (opens native Android share sheet)
+════════════════════════════ */
+function shareBill() {
+  if (!rptData||rptData.length===0){toast('⚠️ View bill details first');return;}
+  var text = buildTextBill();
+  if (navigator.share) {
+    navigator.share({title:app.officeName+' Tea Bill',text:text})
+      .catch(function(e){ if(e.name!=='AbortError') showBillText(text); });
+  } else {
+    showBillText(text);
+  }
+}
 
-/* ════════════════════════════════════════════════════
+/* ════════════════════════════
+   COPY to clipboard
+════════════════════════════ */
+function copyBill() {
+  if (!rptData||rptData.length===0){toast('⚠️ View bill details first');return;}
+  var text = buildTextBill();
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text)
+      .then(function(){ toast('✅ Copied to clipboard!'); })
+      .catch(function(){ showBillText(text); });
+  } else {
+    showBillText(text);
+  }
+}
+
+function showBillText(text) {
+  document.getElementById('billTextBox').textContent = text;
+  document.getElementById('billTextOverlay').classList.add('show');
+}
+
+function copyFromModal() {
+  var text = document.getElementById('billTextBox').textContent;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text)
+      .then(function(){ toast('✅ Copied!'); })
+      .catch(function(){ toast('⚠️ Long-press text to copy manually'); });
+  } else {
+    toast('⚠️ Long-press the text above to copy');
+  }
+}
+
+/* ════════════════════════════
    CLEAR DATA
-   ════════════════════════════════════════════════════ */
-function confirmClearRange() {
-    const start = document.getElementById('clearStart').value;
-    const end   = document.getElementById('clearEnd').value;
-    if (!start || !end)  { showToast("⚠️ Please select From and To dates."); return; }
-    if (start > end)     { showToast("⚠️ 'From' must be before 'To'."); return; }
-
-    const hits = appData.records.filter(r => {
-        const d = r.datetime.split('T')[0];
-        return d >= start && d <= end;
+════════════════════════════ */
+function askClearRange() {
+  var from = document.getElementById('clrFrom').value;
+  var to   = document.getElementById('clrTo').value;
+  if (!from||!to) { toast('⚠️ Select From and To dates'); return; }
+  if (from>to)    { toast('⚠️ From must be before To');   return; }
+  var hits = app.records.filter(function(r){
+    var d=r.datetime.split('T')[0]; return d>=from&&d<=to;
+  });
+  if (hits.length===0){ toast('⚠️ No records in that period'); return; }
+  document.getElementById('confirmMsg').innerHTML =
+    'Delete <b>'+hits.length+' record(s)</b> from <b>'+from+'</b> to <b>'+to+'</b>?';
+  pendingConfirm = function(){
+    app.records = app.records.filter(function(r){
+      var d=r.datetime.split('T')[0]; return !(d>=from&&d<=to);
     });
-    if (hits.length === 0) { showToast("⚠️ No records in that range."); return; }
-
-    document.getElementById('confirmModalMsg').innerHTML =
-        `Delete <strong>${hits.length} record(s)</strong> from <strong>${start}</strong> to <strong>${end}</strong>?`;
-
-    pendingClearAction = () => {
-        appData.records = appData.records.filter(r => {
-            const d = r.datetime.split('T')[0];
-            return !(d >= start && d <= end);
-        });
-        saveData();
-        loadHistory();
-        bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
-        showToast(`✅ ${hits.length} record(s) deleted.`);
-    };
-    new bootstrap.Modal(document.getElementById('confirmModal')).show();
+    save(); renderHistory(); toast('✅ '+hits.length+' record(s) deleted.');
+  };
+  document.getElementById('confirmOverlay').classList.add('show');
 }
 
-function confirmClearAll() {
-    if (appData.records.length === 0) { showToast("⚠️ No records to delete."); return; }
-
-    document.getElementById('confirmModalMsg').innerHTML =
-        `Delete <strong>all ${appData.records.length} record(s)</strong>? The entire history will be wiped.`;
-
-    pendingClearAction = () => {
-        const count = appData.records.length;
-        appData.records = [];
-        saveData();
-        loadHistory();
-        bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
-        showToast(`✅ All ${count} record(s) deleted.`);
-    };
-    new bootstrap.Modal(document.getElementById('confirmModal')).show();
+function askClearAll() {
+  if (!app.records||app.records.length===0){toast('⚠️ No records to delete');return;}
+  document.getElementById('confirmMsg').innerHTML =
+    'Delete <b>ALL '+app.records.length+' record(s)</b>? The entire history will be wiped.';
+  pendingConfirm = function(){
+    var c=app.records.length; app.records=[];
+    save(); renderHistory(); toast('✅ All '+c+' record(s) deleted.');
+  };
+  document.getElementById('confirmOverlay').classList.add('show');
 }
 
-/* ════════════════════════════════════════════════════
-   TOAST NOTIFICATION
-   ════════════════════════════════════════════════════ */
-function showToast(msg) {
-    // Remove any existing toast first
-    document.querySelectorAll('.toast-popup').forEach(t => t.remove());
-    const t = document.createElement('div');
-    t.className  = 'toast-popup';
-    t.innerText  = msg;
-    document.body.appendChild(t);
-    setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.4s'; }, 2600);
-    setTimeout(() => t.remove(), 3000);
+/* ════════════════════════════
+   MODAL HELPERS
+════════════════════════════ */
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+/* ════════════════════════════
+   TOAST
+════════════════════════════ */
+function toast(msg) {
+  var old = document.querySelector('.toast');
+  if (old) old.remove();
+  var t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ t.style.opacity='0'; },2600);
+  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); },3000);
 }
 </script>
 </body>
