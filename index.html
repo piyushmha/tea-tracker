@@ -76,9 +76,10 @@ input:focus,select:focus{border-color:#4e4376;box-shadow:0 0 0 3px rgba(78,67,11
 .bill-box h3{text-align:center;font-size:1rem;font-weight:800;margin-bottom:2px;}
 .bill-box .sub{text-align:center;color:#888;font-size:.8rem;margin-bottom:12px;}
 
-/* 🔧 SCROLLABLE TABLE CONTAINER */
+/* 🔧 SCROLLABLE TABLE CONTAINER - FIXED */
 .bill-table-wrap{
-  max-height:300px;
+  max-height:calc(100vh - 450px);
+  min-height:200px;
   overflow-y:auto;
   overflow-x:auto;
   border:1px solid #e0e4ee;
@@ -88,26 +89,36 @@ input:focus,select:focus{border-color:#4e4376;box-shadow:0 0 0 3px rgba(78,67,11
 }
 
 .bill-tbl{width:100%;border-collapse:collapse;font-size:.82rem;min-width:400px;}
-.bill-tbl th{background:#2b5876;color:#fff;padding:8px 9px;text-align:left;position:sticky;top:0;z-index:1;}
+.bill-tbl th{background:#2b5876;color:#fff;padding:8px 9px;text-align:left;position:sticky;top:0;z-index:10;}
 .bill-tbl td{padding:7px 9px;border-bottom:1px solid #eee;}
 .bill-tbl tr:last-child td{border-bottom:none;}
-.bill-tbl .total-row td{background:#f4f6fb;font-weight:800;border-top:2px solid #2b5876;position:sticky;bottom:0;z-index:2;}
+.bill-tbl .total-row td{background:#f4f6fb;font-weight:800;border-top:2px solid #2b5876;position:sticky;bottom:0;z-index:10;}
 .bill-tbl .total-row td:last-child{color:#2b5876;font-size:1rem;}
 
-.sig-row{display:flex;justify-content:space-between;margin-top:24px;padding:0 8px;}
-.sig-box{text-align:center;}
-.sig-line{width:110px;border-top:1.5px solid #555;margin:0 auto 5px;}.sig-lbl{font-size:.72rem;color:#666;}
+.sig-row{display:flex;justify-content:space-between;margin-top:16px;padding:0 8px;}
+.sig-box{text-align:center;}.sig-line{width:110px;border-top:1.5px solid #555;margin:0 auto 5px;}
+.sig-lbl{font-size:.72rem;color:#666;}
 
-/* 🔧 STICKY ACTION BUTTONS - ALWAYS VISIBLE */
+/* 🔧 FIXED ACTION BUTTONS - ALWAYS VISIBLE */
 .bill-actions{
-  position:sticky;
-  bottom:0;
+  position:fixed;
+  bottom:65px;
+  left:12px;
+  right:12px;
   background:#fff;
-  padding-top:12px;
-  margin-top:12px;
+  padding:12px;
+  border-radius:12px;
+  box-shadow:0 -4px 20px rgba(0,0,0,0.15);
+  z-index:100;
   border-top:2px solid #f0f0f0;
-  z-index:10;
 }
+
+.bill-actions .btn-row{margin-bottom:8px;}
+.bill-actions .btn-row:last-child{margin-bottom:0;}
+.bill-actions .hint{margin-top:8px;font-size:.7rem;text-align:center;color:#888;}
+
+/* Spacer to prevent content hiding behind fixed buttons */
+.bill-spacer{height:180px;}
 
 /* ── TEXT BILL (monospace) ── */
 .monobill{background:#1e1e2e;color:#d4d4d4;font-family:'Courier New',Courier,monospace;font-size:.72rem;padding:14px;border-radius:12px;white-space:pre;overflow:auto;max-height:280px;line-height:1.6;margin-top:10px;}
@@ -135,7 +146,6 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
 .modal-box h4{font-weight:800;margin-bottom:8px;}
 .modal-actions{display:flex;gap:10px;margin-top:16px;}
 .modal-actions .btn{flex:1;padding:11px;}
-
 /* ── TOAST ── */
 .toast{position:fixed;bottom:75px;left:50%;transform:translateX(-50%);background:#1e1e2e;color:#fff;padding:10px 22px;border-radius:50px;font-size:.85rem;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.3);z-index:2000;white-space:nowrap;pointer-events:none;transition:opacity .4s;}
 
@@ -146,6 +156,7 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
 .input-row{display:flex;gap:8px;align-items:flex-end;}
 .input-row input{flex:1;}
 .input-row .btn{width:auto;padding:11px 18px;border-radius:50px;}
+
 /* ── HELPER ── */
 .hint{font-size:.72rem;color:#888;text-align:center;margin-top:8px;line-height:1.5;}
 .mt8{margin-top:8px;}
@@ -183,8 +194,7 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
         <input type="datetime-local" id="entryDate" required>
         <label class="lbl">Tea Seller</label>
         <select id="entrySeller" required></select>
-        <div class="row2" style="margin-top:10px;">
-          <div>
+        <div class="row2" style="margin-top:10px;">          <div>
             <label class="lbl">Cups</label>
             <input type="number" id="entryCups" min="1" placeholder="0" required>
           </div>
@@ -194,7 +204,8 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
           </div>
         </div>
         <div class="mt8"></div>
-        <button type="submit" class="btn btn-primary">💾 Save Entry</button>      </form>
+        <button type="submit" class="btn btn-primary">💾 Save Entry</button>
+      </form>
     </div>
   </div>
 
@@ -232,8 +243,7 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
     <!-- 🔧 FIXED: Scrollable table + Always visible buttons -->
     <div id="billPreview" style="display:none;">
       <div class="bill-box">
-        <h3 id="billTitle">Tea Expense Report</h3>
-        <div class="sub" id="billSub"></div>
+        <h3 id="billTitle">Tea Expense Report</h3>        <div class="sub" id="billSub"></div>
         
         <!-- SCROLLABLE TABLE WRAPPER -->
         <div class="bill-table-wrap">
@@ -243,7 +253,8 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
                 <th>Date & Time</th>
                 <th>Seller</th>
                 <th style="text-align:center">Cups</th>
-                <th>Cost</th>              </tr>
+                <th>Cost</th>
+              </tr>
             </thead>
             <tbody id="billBody"></tbody>
             <tfoot>
@@ -261,25 +272,27 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
         </div>
       </div>
       
-      <!-- ALWAYS VISIBLE ACTION BUTTONS -->
-      <div class="bill-actions">
-        <div class="btn-row">
-          <button class="btn btn-share" onclick="shareBill()">📤 Share Bill</button>
-          <button class="btn btn-copy" onclick="copyBill()">📋 Copy Text</button>
-        </div>
-        <div class="btn-row" style="margin-top:8px;">
-          <button class="btn btn-dark" onclick="downloadPDF()">⬇️ Download PDF</button>
-        </div>
-        <p class="hint" style="margin-top:10px;">Share to WhatsApp / Telegram / Gmail.<br>Or copy and paste anywhere.</p>
+      <!-- Spacer to prevent content hiding behind fixed buttons -->
+      <div class="bill-spacer"></div>
+    </div>
+    
+    <!-- ALWAYS VISIBLE ACTION BUTTONS (Fixed Position) -->
+    <div class="bill-actions" id="billActions" style="display:none;">
+      <div class="btn-row">
+        <button class="btn btn-share" onclick="shareBill()">📤 Share Bill</button>
+        <button class="btn btn-copy" onclick="copyBill()">📋 Copy Text</button>
       </div>
+      <div class="btn-row">
+        <button class="btn btn-dark" onclick="downloadPDF()">⬇️ Download PDF</button>
+      </div>
+      <p class="hint">Share to WhatsApp / Telegram / Gmail</p>
     </div>
   </div>
 
   <!-- ═══ VIEW: SETTINGS ═══ -->
   <div id="view-settings" class="view">
     <div class="card">
-      <div class="stitle">⚙️ Settings</div>
-      <label class="lbl">Office / Company Name</label>
+      <div class="stitle">⚙️ Settings</div>      <label class="lbl">Office / Company Name</label>
       <input type="text" id="setOfficeName" placeholder="e.g. ABC Office">
       <label class="lbl">Manager Name</label>
       <input type="text" id="setManager" placeholder="e.g. Rajesh Kumar">
@@ -287,12 +300,13 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
       <button class="btn btn-primary" onclick="saveSettings()">✅ Save Settings</button>
 
       <div style="margin-top:20px;">
-        <div class="stitle" style="font-size:.9rem;">🧑‍🤝‍🧑 Tea Sellers</div>
+        <div class="stitle" style="font-size:.9rem;">🧑‍‍🧑 Tea Sellers</div>
         <div class="input-row">
           <input type="text" id="newSeller" placeholder="Seller name">
           <button class="btn btn-primary" onclick="addSeller()">Add</button>
         </div>
-        <ul class="seller-list" id="sellerList"></ul>      </div>
+        <ul class="seller-list" id="sellerList"></ul>
+      </div>
 
       <div class="danger-zone">
         <div class="stitle" style="color:#e74c3c;font-size:.95rem;">🗑️ Clear Records</div>
@@ -327,8 +341,7 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
     <p id="confirmMsg" style="color:#444;font-size:.9rem;line-height:1.5;"></p>
     <p style="color:#e74c3c;font-size:.8rem;font-weight:700;margin-top:8px;">This action cannot be undone.</p>
     <div class="modal-actions">
-      <button class="btn btn-grey" onclick="closeModal('confirmOverlay')">Cancel</button>
-      <button class="btn btn-danger" id="confirmOkBtn">Yes, Delete</button>
+      <button class="btn btn-grey" onclick="closeModal('confirmOverlay')">Cancel</button>      <button class="btn btn-danger" id="confirmOkBtn">Yes, Delete</button>
     </div>
   </div>
 </div>
@@ -341,7 +354,8 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
     <div class="monobill" id="billTextBox"></div>
     <div class="modal-actions">
       <button class="btn btn-grey" onclick="closeModal('billTextOverlay')">Close</button>
-      <button class="btn btn-copy" onclick="copyFromModal()">📋 Copy</button>    </div>
+      <button class="btn btn-copy" onclick="copyFromModal()">📋 Copy</button>
+    </div>
   </div>
 </div>
 
@@ -376,8 +390,7 @@ var SAVE_KEY = 'teaAppData_v3';
 ════════════════════════════ */
 function getDatePart(datetimeStr) {
   if (!datetimeStr) return '';
-  return datetimeStr.split('T')[0];
-}
+  return datetimeStr.split('T')[0];}
 
 /* ════════════════════════════   INIT
 ════════════════════════════ */
@@ -390,6 +403,7 @@ window.onload = function() {
     console.warn('⚠️ jsPDF not ready, will retry...');
     setTimeout(initJsPDF, 1000);
   }
+
   loadData();
 
   /* Set datetime default */
@@ -425,8 +439,7 @@ window.onload = function() {
       toast('⚠️ Invalid date/time format');
       return;
     }
-    
-    var rec = {
+        var rec = {
       id:       Date.now(),      datetime: dtVal,
       seller:   document.getElementById('entrySeller').value,
       cups:     parseInt(document.getElementById('entryCups').value) || 0,
@@ -439,7 +452,8 @@ window.onload = function() {
       return (isNaN(da) || isNaN(db)) ? 0 : db - da; 
     });
     save();
-    toast('✅ Entry saved!');    this.reset();
+    toast('✅ Entry saved!');
+    this.reset();
     var now2 = new Date();
     now2.setMinutes(now2.getMinutes()-now2.getTimezoneOffset());
     document.getElementById('entryDate').value = now2.toISOString().slice(0,16);
@@ -474,8 +488,7 @@ function loadData() {
     var raw = localStorage.getItem(ALL_KEYS[i]);
     if (raw) {
       try {
-        var parsed = JSON.parse(raw);
-        app.officeName = parsed.officeName || app.officeName;
+        var parsed = JSON.parse(raw);        app.officeName = parsed.officeName || app.officeName;
         app.manager    = parsed.manager    || app.manager;
         app.sellers    = parsed.sellers    || app.sellers;
         app.records    = parsed.records    || app.records;
@@ -488,7 +501,8 @@ function loadData() {
 }
 
 function save() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(app)); } catch(ex) { toast('⚠️ Storage error!'); }  updateStats();
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(app)); } catch(ex) { toast('⚠️ Storage error!'); }
+  updateStats();
 }
 
 function syncUI() {
@@ -513,14 +527,17 @@ function nav(v) {
   document.getElementById('view-'+v).classList.add('active');
   document.getElementById('nb-'+v).classList.add('on');
   if (v==='history') renderHistory();
+  if (v!=='bill') {
+    document.getElementById('billPreview').style.display='none';
+    document.getElementById('billActions').style.display='none';
+  }
 }
 
 /* ════════════════════════════
    STATS
 ════════════════════════════ */
 function updateStats() {
-  var _s = new Date(); _s.setMinutes(_s.getMinutes() - _s.getTimezoneOffset());
-  var today = _s.toISOString().split('T')[0];
+  var _s = new Date(); _s.setMinutes(_s.getMinutes() - _s.getTimezoneOffset());  var today = _s.toISOString().split('T')[0];
   var t = 0;
   for (var i=0;i<app.records.length;i++) {
     var r = app.records[i];
@@ -537,7 +554,8 @@ function renderHistory() {
   if (!app.records || app.records.length === 0) {
     tb.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:24px;color:#aaa;">No records yet.</td></tr>';
     return;
-  }  var html = '';
+  }
+  var html = '';
   for (var i=0;i<app.records.length;i++) {
     var r  = app.records[i];
     var d  = new Date(r.datetime);
@@ -568,8 +586,7 @@ function renderSellers() {
     ul.innerHTML='<li style="color:#aaa;font-size:.85rem;padding:10px 0;">No sellers yet.</li>';
     return;
   }
-  var h='';
-  for (var j=0;j<app.sellers.length;j++) {
+  var h='';  for (var j=0;j<app.sellers.length;j++) {
     h+='<li><span>'+app.sellers[j]+'</span>'
      +'<button class="btn btn-outline-danger btn-sm" onclick="removeSeller('+j+')">✕ Remove</button></li>';
   }
@@ -586,6 +603,7 @@ function addSeller() {
   renderSellers();
   toast('✅ Seller added!');
 }
+
 function removeSeller(i) {
   app.sellers.splice(i,1);
   save();
@@ -617,8 +635,7 @@ function generateBill() {
   rptData = [];
   for (var i=0;i<app.records.length;i++) {
     var r = app.records[i];
-    var recordDate = getDatePart(r.datetime);
-    if (recordDate >= from && recordDate <= to) rptData.push(r);
+    var recordDate = getDatePart(r.datetime);    if (recordDate >= from && recordDate <= to) rptData.push(r);
   }
   rptData.sort(function(a,b){
     var da = new Date(a.datetime), db = new Date(b.datetime);
@@ -628,6 +645,7 @@ function generateBill() {
   if (rptData.length === 0) {
     toast('⚠️ No records found for this period');
     document.getElementById('billPreview').style.display='none';
+    document.getElementById('billActions').style.display='none';
     return;
   }
 
@@ -635,7 +653,8 @@ function generateBill() {
   var rows = '';
   for (var j=0;j<rptData.length;j++) {
     var r2 = rptData[j];
-    var d2 = new Date(r2.datetime);    var cost = parseFloat(r2.cost);
+    var d2 = new Date(r2.datetime);
+    var cost = parseFloat(r2.cost);
     rptTotal += cost;
     var dtDisplay = getDatePart(r2.datetime);
     var tmDisplay = isNaN(d2)?'--:--':d2.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
@@ -654,6 +673,7 @@ function generateBill() {
   document.getElementById('billBody').innerHTML    = rows;
   document.getElementById('billTotal').textContent = 'Rs. '+rptTotal.toFixed(2);
   document.getElementById('billPreview').style.display = 'block';
+  document.getElementById('billActions').style.display = 'block';
 
   setTimeout(function(){
     document.getElementById('billPreview').scrollIntoView({behavior:'smooth',block:'start'});
@@ -664,8 +684,7 @@ function generateBill() {
 /* ════════════════════════════
    BUILD PLAIN TEXT BILL
 ════════════════════════════ */
-function buildTextBill() {
-  var sep = '------------------------------------';
+function buildTextBill() {  var sep = '------------------------------------';
   var t   = '';
   t += 'TEA EXPENSE REPORT\n';
   t += app.officeName + '\n';
@@ -684,7 +703,8 @@ function buildTextBill() {
     var n  = (''+(i+1)).padStart(2,'0');
     t += n+'  '+dt+'  '+tm+'  '
        +sl.padEnd(10)+'  '
-       +(''+r.cups).padStart(4)+'  '       +('Rs.'+parseFloat(r.cost).toFixed(2)).padStart(9)+'\n';
+       +(''+r.cups).padStart(4)+'  '
+       +('Rs.'+parseFloat(r.cost).toFixed(2)).padStart(9)+'\n';
   }
   t += sep + '\n';
   t += '              TOTAL  :  Rs.'+rptTotal.toFixed(2)+'\n';
@@ -713,8 +733,7 @@ function shareBill() {
    COPY
 ════════════════════════════ */
 function copyBill() {
-  if (!rptData||rptData.length===0){toast('⚠️ View bill details first');return;}
-  var text = buildTextBill();
+  if (!rptData||rptData.length===0){toast('⚠️ View bill details first');return;}  var text = buildTextBill();
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text)
       .then(function(){ toast('✅ Copied to clipboard!'); })
@@ -733,7 +752,8 @@ function copyFromModal() {
   var text = document.getElementById('billTextBox').textContent;
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text)
-      .then(function(){ toast('✅ Copied!'); })      .catch(function(){ toast('⚠️ Long-press text to copy manually'); });
+      .then(function(){ toast('✅ Copied!'); })
+      .catch(function(){ toast('⚠️ Long-press text to copy manually'); });
   } else {
     toast('⚠️ Long-press the text above to copy');
   }
@@ -762,8 +782,7 @@ function downloadPDF() {
   // Show loading overlay
   document.getElementById('pdfOverlay').classList.add('show');
   document.getElementById('pdfStatus').textContent = 'Generating PDF...';
-  
-  setTimeout(function() {
+    setTimeout(function() {
     try {
       var doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       
@@ -782,7 +801,8 @@ function downloadPDF() {
       doc.text(app.officeName, pageW / 2, 15, { align: 'center' });
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.text('Tea Expense Report', pageW / 2, 23, { align: 'center' });      
+      doc.text('Tea Expense Report', pageW / 2, 23, { align: 'center' });
+      
       // Info line
       doc.setFontSize(9);
       doc.text('Manager: ' + app.manager, margin, 38);
@@ -811,8 +831,7 @@ function downloadPDF() {
         // Alternating row color
         if (i % 2 === 0) {
           doc.setFillColor(245, 245, 245);
-          doc.rect(margin, y - 5, pageW - margin * 2, 6, 'F');
-        }
+          doc.rect(margin, y - 5, pageW - margin * 2, 6, 'F');        }
         
         doc.setTextColor(0, 0, 0);
         var r = rptData[i];
@@ -831,7 +850,8 @@ function downloadPDF() {
         if (y > 270) {
           doc.addPage();
           y = 20;
-        }      }
+        }
+      }
       
       // Total
       y += 10;
@@ -860,8 +880,7 @@ function downloadPDF() {
       doc.setTextColor(150, 150, 150);
       doc.text('Generated by Tea Tracker | Piyuneel', pageW / 2, 285, { align: 'center' });
       
-      // Save
-      var fname = app.officeName.replace(/[^a-z0-9]/gi, '_') + '_TeaBill.pdf';
+      // Save      var fname = app.officeName.replace(/[^a-z0-9]/gi, '_') + '_TeaBill.pdf';
       doc.save(fname);
       
       // Hide overlay & show success
@@ -881,6 +900,7 @@ function downloadPDF() {
     }
   }, 500);
 }
+
 function askClearRange() {
   var from = document.getElementById('clrFrom').value;
   var to   = document.getElementById('clrTo').value;
@@ -909,8 +929,7 @@ function askClearAll() {
     var c=app.records.length; app.records=[];
     save(); renderHistory(); toast('✅ All '+c+' record(s) deleted.');
   };
-  document.getElementById('confirmOverlay').classList.add('show');
-}
+  document.getElementById('confirmOverlay').classList.add('show');}
 
 /* ════════════════════════════
    MODAL HELPERS
@@ -929,7 +948,8 @@ function toast(msg) {
   t.className = 'toast';
   t.textContent = msg;
   document.body.appendChild(t);
-  setTimeout(function(){ t.style.opacity='0'; },2600);  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); },3000);
+  setTimeout(function(){ t.style.opacity='0'; },2600);
+  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); },3000);
 }
 </script>
 </body>
