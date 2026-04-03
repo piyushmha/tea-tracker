@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Tea Tracker</title>
-<!-- More reliable jsPDF CDN -->
+<!-- jsPDF CDN for PDF generation -->
 <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
 /* ── RESET & BASE ── */
@@ -48,7 +48,6 @@ input[type=text],input[type=number],input[type=date],input[type=datetime-local],
 }
 input:focus,select:focus{border-color:#4e4376;box-shadow:0 0 0 3px rgba(78,67,118,.1);}
 .row2{display:flex;gap:10px;}.row2>div{flex:1;}
-
 /* ── BUTTONS ── */
 .btn{display:block;width:100%;padding:13px;border:none;border-radius:50px;font-weight:700;font-size:.95rem;cursor:pointer;text-align:center;transition:opacity .15s,transform .1s;}
 .btn:active{opacity:.85;transform:scale(.98);}
@@ -76,16 +75,39 @@ input:focus,select:focus{border-color:#4e4376;box-shadow:0 0 0 3px rgba(78,67,11
 .bill-box{border:1.5px solid #e0e4ee;border-radius:14px;padding:16px;background:#fff;margin-top:2px;}
 .bill-box h3{text-align:center;font-size:1rem;font-weight:800;margin-bottom:2px;}
 .bill-box .sub{text-align:center;color:#888;font-size:.8rem;margin-bottom:12px;}
-.bill-tbl{width:100%;border-collapse:collapse;font-size:.82rem;}
-.bill-tbl th{background:#2b5876;color:#fff;padding:8px 9px;text-align:left;}
+
+/* 🔧 SCROLLABLE TABLE CONTAINER */
+.bill-table-wrap{
+  max-height:300px;
+  overflow-y:auto;
+  overflow-x:auto;
+  border:1px solid #e0e4ee;
+  border-radius:8px;
+  margin-bottom:12px;
+  -webkit-overflow-scrolling:touch;
+}
+
+.bill-tbl{width:100%;border-collapse:collapse;font-size:.82rem;min-width:400px;}
+.bill-tbl th{background:#2b5876;color:#fff;padding:8px 9px;text-align:left;position:sticky;top:0;z-index:1;}
 .bill-tbl td{padding:7px 9px;border-bottom:1px solid #eee;}
 .bill-tbl tr:last-child td{border-bottom:none;}
-.bill-tbl .total-row td{background:#f4f6fb;font-weight:800;border-top:2px solid #2b5876;}
+.bill-tbl .total-row td{background:#f4f6fb;font-weight:800;border-top:2px solid #2b5876;position:sticky;bottom:0;z-index:2;}
 .bill-tbl .total-row td:last-child{color:#2b5876;font-size:1rem;}
+
 .sig-row{display:flex;justify-content:space-between;margin-top:24px;padding:0 8px;}
 .sig-box{text-align:center;}
-.sig-line{width:110px;border-top:1.5px solid #555;margin:0 auto 5px;}
-.sig-lbl{font-size:.72rem;color:#666;}
+.sig-line{width:110px;border-top:1.5px solid #555;margin:0 auto 5px;}.sig-lbl{font-size:.72rem;color:#666;}
+
+/* 🔧 STICKY ACTION BUTTONS - ALWAYS VISIBLE */
+.bill-actions{
+  position:sticky;
+  bottom:0;
+  background:#fff;
+  padding-top:12px;
+  margin-top:12px;
+  border-top:2px solid #f0f0f0;
+  z-index:10;
+}
 
 /* ── TEXT BILL (monospace) ── */
 .monobill{background:#1e1e2e;color:#d4d4d4;font-family:'Courier New',Courier,monospace;font-size:.72rem;padding:14px;border-radius:12px;white-space:pre;overflow:auto;max-height:280px;line-height:1.6;margin-top:10px;}
@@ -96,7 +118,8 @@ input:focus,select:focus{border-color:#4e4376;box-shadow:0 0 0 3px rgba(78,67,11
 .nav-btn .ico{font-size:1.4rem;display:block;margin-bottom:1px;}
 .nav-btn.on{color:#4e4376;}
 
-/* ── POWERED BY ── */.pwrby{position:fixed;bottom:60px;width:100%;text-align:center;background:linear-gradient(135deg,#2b5876,#4e4376);color:rgba(255,255,255,.85);padding:5px;font-size:.7rem;font-weight:600;z-index:899;}
+/* ── POWERED BY ── */
+.pwrby{position:fixed;bottom:60px;width:100%;text-align:center;background:linear-gradient(135deg,#2b5876,#4e4376);color:rgba(255,255,255,.85);padding:5px;font-size:.7rem;font-weight:600;z-index:899;}
 .pwrby b{color:#ffd700;}
 @keyframes hb{0%,100%{transform:scale(1);}50%{transform:scale(1.3);}}
 .hrt{display:inline-block;color:#ff4757;animation:hb 1.4s infinite;}
@@ -123,7 +146,6 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
 .input-row{display:flex;gap:8px;align-items:flex-end;}
 .input-row input{flex:1;}
 .input-row .btn{width:auto;padding:11px 18px;border-radius:50px;}
-
 /* ── HELPER ── */
 .hint{font-size:.72rem;color:#888;text-align:center;margin-top:8px;line-height:1.5;}
 .mt8{margin-top:8px;}
@@ -172,8 +194,7 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
           </div>
         </div>
         <div class="mt8"></div>
-        <button type="submit" class="btn btn-primary">💾 Save Entry</button>
-      </form>
+        <button type="submit" class="btn btn-primary">💾 Save Entry</button>      </form>
     </div>
   </div>
 
@@ -194,7 +215,8 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
   <div id="view-bill" class="view">
     <div class="card">
       <div class="stitle">🧾 Generate Bill</div>
-      <div class="row2">        <div>
+      <div class="row2">
+        <div>
           <label class="lbl">From Date</label>
           <input type="date" id="billFrom">
         </div>
@@ -207,33 +229,49 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
       <button class="btn btn-success" onclick="generateBill()">👁 View Bill Details</button>
     </div>
 
+    <!-- 🔧 FIXED: Scrollable table + Always visible buttons -->
     <div id="billPreview" style="display:none;">
       <div class="bill-box">
         <h3 id="billTitle">Tea Expense Report</h3>
         <div class="sub" id="billSub"></div>
-        <div style="overflow-x:auto;">
+        
+        <!-- SCROLLABLE TABLE WRAPPER -->
+        <div class="bill-table-wrap">
           <table class="bill-tbl">
-            <thead><tr><th>Date & Time</th><th>Seller</th><th>Cups</th><th>Cost</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Date & Time</th>
+                <th>Seller</th>
+                <th style="text-align:center">Cups</th>
+                <th>Cost</th>              </tr>
+            </thead>
             <tbody id="billBody"></tbody>
-            <tr class="total-row">
-              <td colspan="3" style="text-align:right;padding:8px 9px;">Grand Total</td>
-              <td id="billTotal" style="padding:8px 9px;">Rs. 0.00</td>
-            </tr>
+            <tfoot>
+              <tr class="total-row">
+                <td colspan="3" style="text-align:right;padding:10px 9px;"><b>Grand Total</b></td>
+                <td id="billTotal" style="padding:10px 9px;"><b>Rs. 0.00</b></td>
+              </tr>
+            </tfoot>
           </table>
         </div>
+        
         <div class="sig-row">
           <div class="sig-box"><div class="sig-line"></div><div class="sig-lbl">Manager</div></div>
           <div class="sig-box"><div class="sig-line"></div><div class="sig-lbl">Seller</div></div>
         </div>
       </div>
-      <div class="btn-row">
-        <button class="btn btn-share" onclick="shareBill()">📤 Share Bill</button>
-        <button class="btn btn-copy" onclick="copyBill()">📋 Copy Text</button>
+      
+      <!-- ALWAYS VISIBLE ACTION BUTTONS -->
+      <div class="bill-actions">
+        <div class="btn-row">
+          <button class="btn btn-share" onclick="shareBill()">📤 Share Bill</button>
+          <button class="btn btn-copy" onclick="copyBill()">📋 Copy Text</button>
+        </div>
+        <div class="btn-row" style="margin-top:8px;">
+          <button class="btn btn-dark" onclick="downloadPDF()">⬇️ Download PDF</button>
+        </div>
+        <p class="hint" style="margin-top:10px;">Share to WhatsApp / Telegram / Gmail.<br>Or copy and paste anywhere.</p>
       </div>
-      <div class="btn-row" style="margin-top:8px;">
-        <button class="btn btn-dark" onclick="downloadPDF()">⬇️ Download PDF</button>
-      </div>
-      <p class="hint">Share to WhatsApp / Telegram / Gmail.<br>Or copy and paste anywhere.</p>
     </div>
   </div>
 
@@ -243,7 +281,8 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
       <div class="stitle">⚙️ Settings</div>
       <label class="lbl">Office / Company Name</label>
       <input type="text" id="setOfficeName" placeholder="e.g. ABC Office">
-      <label class="lbl">Manager Name</label>      <input type="text" id="setManager" placeholder="e.g. Rajesh Kumar">
+      <label class="lbl">Manager Name</label>
+      <input type="text" id="setManager" placeholder="e.g. Rajesh Kumar">
       <div class="mt8"></div>
       <button class="btn btn-primary" onclick="saveSettings()">✅ Save Settings</button>
 
@@ -253,8 +292,7 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
           <input type="text" id="newSeller" placeholder="Seller name">
           <button class="btn btn-primary" onclick="addSeller()">Add</button>
         </div>
-        <ul class="seller-list" id="sellerList"></ul>
-      </div>
+        <ul class="seller-list" id="sellerList"></ul>      </div>
 
       <div class="danger-zone">
         <div class="stitle" style="color:#e74c3c;font-size:.95rem;">🗑️ Clear Records</div>
@@ -292,7 +330,8 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
       <button class="btn btn-grey" onclick="closeModal('confirmOverlay')">Cancel</button>
       <button class="btn btn-danger" id="confirmOkBtn">Yes, Delete</button>
     </div>
-  </div></div>
+  </div>
+</div>
 
 <!-- ═══ BILL TEXT MODAL ═══ -->
 <div class="overlay" id="billTextOverlay">
@@ -302,8 +341,7 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
     <div class="monobill" id="billTextBox"></div>
     <div class="modal-actions">
       <button class="btn btn-grey" onclick="closeModal('billTextOverlay')">Close</button>
-      <button class="btn btn-copy" onclick="copyFromModal()">📋 Copy</button>
-    </div>
+      <button class="btn btn-copy" onclick="copyFromModal()">📋 Copy</button>    </div>
   </div>
 </div>
 
@@ -352,7 +390,6 @@ window.onload = function() {
     console.warn('⚠️ jsPDF not ready, will retry...');
     setTimeout(initJsPDF, 1000);
   }
-
   loadData();
 
   /* Set datetime default */
@@ -402,8 +439,7 @@ window.onload = function() {
       return (isNaN(da) || isNaN(db)) ? 0 : db - da; 
     });
     save();
-    toast('✅ Entry saved!');
-    this.reset();
+    toast('✅ Entry saved!');    this.reset();
     var now2 = new Date();
     now2.setMinutes(now2.getMinutes()-now2.getTimezoneOffset());
     document.getElementById('entryDate').value = now2.toISOString().slice(0,16);
@@ -439,7 +475,8 @@ function loadData() {
     if (raw) {
       try {
         var parsed = JSON.parse(raw);
-        app.officeName = parsed.officeName || app.officeName;        app.manager    = parsed.manager    || app.manager;
+        app.officeName = parsed.officeName || app.officeName;
+        app.manager    = parsed.manager    || app.manager;
         app.sellers    = parsed.sellers    || app.sellers;
         app.records    = parsed.records    || app.records;
         if (ALL_KEYS[i] !== SAVE_KEY) localStorage.setItem(SAVE_KEY, JSON.stringify(app));
@@ -451,8 +488,7 @@ function loadData() {
 }
 
 function save() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(app)); } catch(ex) { toast('⚠️ Storage error!'); }
-  updateStats();
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(app)); } catch(ex) { toast('⚠️ Storage error!'); }  updateStats();
 }
 
 function syncUI() {
@@ -488,7 +524,8 @@ function updateStats() {
   var t = 0;
   for (var i=0;i<app.records.length;i++) {
     var r = app.records[i];
-    if (getDatePart(r.datetime) === today) t += parseFloat(r.cost)||0;  }
+    if (getDatePart(r.datetime) === today) t += parseFloat(r.cost)||0;
+  }
   document.getElementById('todayAmt').textContent = 'Rs. ' + t.toFixed(2);
 }
 
@@ -500,8 +537,7 @@ function renderHistory() {
   if (!app.records || app.records.length === 0) {
     tb.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:24px;color:#aaa;">No records yet.</td></tr>';
     return;
-  }
-  var html = '';
+  }  var html = '';
   for (var i=0;i<app.records.length;i++) {
     var r  = app.records[i];
     var d  = new Date(r.datetime);
@@ -537,7 +573,8 @@ function renderSellers() {
     h+='<li><span>'+app.sellers[j]+'</span>'
      +'<button class="btn btn-outline-danger btn-sm" onclick="removeSeller('+j+')">✕ Remove</button></li>';
   }
-  ul.innerHTML = h;}
+  ul.innerHTML = h;
+}
 
 function addSeller() {
   var v = document.getElementById('newSeller').value.trim();
@@ -549,7 +586,6 @@ function addSeller() {
   renderSellers();
   toast('✅ Seller added!');
 }
-
 function removeSeller(i) {
   app.sellers.splice(i,1);
   save();
@@ -586,7 +622,8 @@ function generateBill() {
   }
   rptData.sort(function(a,b){
     var da = new Date(a.datetime), db = new Date(b.datetime);
-    return (isNaN(da) || isNaN(db)) ? 0 : da - db;  });
+    return (isNaN(da) || isNaN(db)) ? 0 : da - db;
+  });
 
   if (rptData.length === 0) {
     toast('⚠️ No records found for this period');
@@ -598,8 +635,7 @@ function generateBill() {
   var rows = '';
   for (var j=0;j<rptData.length;j++) {
     var r2 = rptData[j];
-    var d2 = new Date(r2.datetime);
-    var cost = parseFloat(r2.cost);
+    var d2 = new Date(r2.datetime);    var cost = parseFloat(r2.cost);
     rptTotal += cost;
     var dtDisplay = getDatePart(r2.datetime);
     var tmDisplay = isNaN(d2)?'--:--':d2.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
@@ -621,7 +657,7 @@ function generateBill() {
 
   setTimeout(function(){
     document.getElementById('billPreview').scrollIntoView({behavior:'smooth',block:'start'});
-    toast('📄 Bill generated! Scroll down to view.');
+    toast('📄 Bill generated! Scroll table to see all entries.');
   },150);
 }
 
@@ -635,7 +671,8 @@ function buildTextBill() {
   t += app.officeName + '\n';
   t += sep + '\n';
   t += 'Manager : ' + app.manager + '\n';
-  t += 'Period  : ' + rptRange    + '\n';  t += sep + '\n';
+  t += 'Period  : ' + rptRange    + '\n';
+  t += sep + '\n';
   t += 'No  Date        Time   Seller      Cups  Cost\n';
   t += sep + '\n';
   for (var i=0;i<rptData.length;i++) {
@@ -647,8 +684,7 @@ function buildTextBill() {
     var n  = (''+(i+1)).padStart(2,'0');
     t += n+'  '+dt+'  '+tm+'  '
        +sl.padEnd(10)+'  '
-       +(''+r.cups).padStart(4)+'  '
-       +('Rs.'+parseFloat(r.cost).toFixed(2)).padStart(9)+'\n';
+       +(''+r.cups).padStart(4)+'  '       +('Rs.'+parseFloat(r.cost).toFixed(2)).padStart(9)+'\n';
   }
   t += sep + '\n';
   t += '              TOTAL  :  Rs.'+rptTotal.toFixed(2)+'\n';
@@ -684,7 +720,8 @@ function copyBill() {
       .then(function(){ toast('✅ Copied to clipboard!'); })
       .catch(function(){ showBillText(text); });
   } else {
-    showBillText(text);  }
+    showBillText(text);
+  }
 }
 
 function showBillText(text) {
@@ -696,15 +733,14 @@ function copyFromModal() {
   var text = document.getElementById('billTextBox').textContent;
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text)
-      .then(function(){ toast('✅ Copied!'); })
-      .catch(function(){ toast('⚠️ Long-press text to copy manually'); });
+      .then(function(){ toast('✅ Copied!'); })      .catch(function(){ toast('⚠️ Long-press text to copy manually'); });
   } else {
     toast('⚠️ Long-press the text above to copy');
   }
 }
 
 /* ════════════════════════════
-   DOWNLOAD PDF - SIMPLIFIED & RELIABLE
+   DOWNLOAD PDF - FIXED & RELIABLE
 ════════════════════════════ */
 function downloadPDF() {
   if (!rptData || rptData.length === 0) { 
@@ -733,7 +769,8 @@ function downloadPDF() {
       
       var pageW = 210;
       var margin = 15;
-      var y = 20;      
+      var y = 20;
+      
       // Header background
       doc.setFillColor(43, 88, 118);
       doc.rect(0, 0, pageW, 30, 'F');
@@ -745,8 +782,7 @@ function downloadPDF() {
       doc.text(app.officeName, pageW / 2, 15, { align: 'center' });
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.text('Tea Expense Report', pageW / 2, 23, { align: 'center' });
-      
+      doc.text('Tea Expense Report', pageW / 2, 23, { align: 'center' });      
       // Info line
       doc.setFontSize(9);
       doc.text('Manager: ' + app.manager, margin, 38);
@@ -782,7 +818,8 @@ function downloadPDF() {
         var r = rptData[i];
         var d = new Date(r.datetime);
         var dt = getDatePart(r.datetime);
-        var tm = isNaN(d) ? '--:--' : d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});        
+        var tm = isNaN(d) ? '--:--' : d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        
         doc.text('' + (i + 1), margin + 3, y);
         doc.text(dt, margin + 15, y);
         doc.text(tm, margin + 40, y);
@@ -794,8 +831,7 @@ function downloadPDF() {
         if (y > 270) {
           doc.addPage();
           y = 20;
-        }
-      }
+        }      }
       
       // Total
       y += 10;
@@ -831,7 +867,8 @@ function downloadPDF() {
       // Hide overlay & show success
       document.getElementById('pdfOverlay').classList.remove('show');
       toast('✅ PDF downloaded!');
-          } catch (e) {
+      
+    } catch (e) {
       console.error('PDF Error:', e);
       document.getElementById('pdfOverlay').classList.remove('show');
       document.getElementById('pdfStatus').textContent = 'Error: ' + e.message;
@@ -844,7 +881,6 @@ function downloadPDF() {
     }
   }, 500);
 }
-
 function askClearRange() {
   var from = document.getElementById('clrFrom').value;
   var to   = document.getElementById('clrTo').value;
@@ -880,7 +916,8 @@ function askClearAll() {
    MODAL HELPERS
 ════════════════════════════ */
 function closeModal(id) {
-  document.getElementById(id).classList.remove('show');}
+  document.getElementById(id).classList.remove('show');
+}
 
 /* ════════════════════════════
    TOAST
@@ -892,8 +929,7 @@ function toast(msg) {
   t.className = 'toast';
   t.textContent = msg;
   document.body.appendChild(t);
-  setTimeout(function(){ t.style.opacity='0'; },2600);
-  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); },3000);
+  setTimeout(function(){ t.style.opacity='0'; },2600);  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); },3000);
 }
 </script>
 </body>
