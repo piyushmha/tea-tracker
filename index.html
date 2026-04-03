@@ -99,7 +99,7 @@ input:focus,select:focus{border-color:#4e4376;box-shadow:0 0 0 3px rgba(78,67,11
 .sig-box{text-align:center;}.sig-line{width:110px;border-top:1.5px solid #555;margin:0 auto 5px;}
 .sig-lbl{font-size:.72rem;color:#666;}
 
-/* 🔧 ACTION BUTTONS - POSITIONED ABOVE NAV BAR */
+/* 🔧 ACTION BUTTONS - VISIBLE BELOW BILL */
 .bill-actions{
   background:#fff;
   padding:12px;
@@ -270,7 +270,7 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
         </div>
       </div>
       
-      <!-- ACTION BUTTONS - VISIBLE BELOW BILL (NOT HIDDEN BY NAV) -->
+      <!-- ACTION BUTTONS -->
       <div class="bill-actions" id="billActions">
         <div class="btn-row">
           <button class="btn btn-share" onclick="shareBill()">📤 Share Bill</button>
@@ -282,7 +282,7 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
         <p class="hint">Share to WhatsApp / Telegram / Gmail</p>
       </div>
       
-      <!-- Spacer to prevent content hiding behind bottom nav -->
+      <!-- Spacer -->
       <div class="bill-spacer"></div>
     </div>
   </div>
@@ -298,7 +298,7 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
       <button class="btn btn-primary" onclick="saveSettings()">✅ Save Settings</button>
 
       <div style="margin-top:20px;">
-        <div class="stitle" style="font-size:.9rem;">🧑‍‍🧑 Tea Sellers</div>
+        <div class="stitle" style="font-size:.9rem;">🧑‍🧑 Tea Sellers</div>
         <div class="input-row">
           <input type="text" id="newSeller" placeholder="Seller name">
           <button class="btn btn-primary" onclick="addSeller()">Add</button>
@@ -368,7 +368,7 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
    STATE
 ════════════════════════════ */
 var app = {
-  officeName: 'Tea Tracker',
+  officeName: 'Tea_Tracker',
   manager:    'Office Manager',
   sellers:    ['Canteen', 'Street Vendor'],
   records:    []
@@ -467,7 +467,6 @@ function initJsPDF() {
     console.log('✅ jsPDF loaded on retry');
     return;
   }
-  // Retry up to 5 times
   var retries = parseInt(localStorage.getItem('jspdf_retries') || '0');
   if (retries < 5) {
     localStorage.setItem('jspdf_retries', retries + 1);
@@ -487,9 +486,9 @@ function loadData() {
     if (raw) {
       try {
         var parsed = JSON.parse(raw);
-        app.officeName = parsed.officeName || app.officeName;
-        app.manager    = parsed.manager    || app.manager;        app.sellers    = parsed.sellers    || app.sellers;
-        app.records    = parsed.records    || app.records;
+        app.officeName = parsed.officeName || 'Tea_Tracker';
+        app.manager    = parsed.manager    || 'Office Manager';
+        app.sellers    = parsed.sellers    || ['Canteen', 'Street Vendor'];        app.records    = parsed.records    || [];
         if (ALL_KEYS[i] !== SAVE_KEY) localStorage.setItem(SAVE_KEY, JSON.stringify(app));
         break;
       } catch(ex) { /* corrupt, skip */ }
@@ -525,7 +524,6 @@ function nav(v) {
   document.getElementById('view-'+v).classList.add('active');
   document.getElementById('nb-'+v).classList.add('on');
   if (v==='history') renderHistory();
-  // Hide bill buttons when not on bill tab
   if (v!=='bill') {
     document.getElementById('billPreview').style.display='none';
   }
@@ -537,9 +535,9 @@ function nav(v) {
 function updateStats() {
   var _s = new Date(); _s.setMinutes(_s.getMinutes() - _s.getTimezoneOffset());
   var today = _s.toISOString().split('T')[0];
-  var t = 0;  for (var i=0;i<app.records.length;i++) {
-    var r = app.records[i];
-    if (getDatePart(r.datetime) === today) t += parseFloat(r.cost)||0;
+  var t = 0;
+  for (var i=0;i<app.records.length;i++) {
+    var r = app.records[i];    if (getDatePart(r.datetime) === today) t += parseFloat(r.cost)||0;
   }
   document.getElementById('todayAmt').textContent = 'Rs. ' + t.toFixed(2);
 }
@@ -586,9 +584,9 @@ function renderSellers() {
   }
   var h='';
   for (var j=0;j<app.sellers.length;j++) {
-    h+='<li><span>'+app.sellers[j]+'</span>'     +'<button class="btn btn-outline-danger btn-sm" onclick="removeSeller('+j+')">✕ Remove</button></li>';
-  }
-  ul.innerHTML = h;
+    h+='<li><span>'+app.sellers[j]+'</span>'
+     +'<button class="btn btn-outline-danger btn-sm" onclick="removeSeller('+j+')">✕ Remove</button></li>';
+  }  ul.innerHTML = h;
 }
 
 function addSeller() {
@@ -611,7 +609,7 @@ function removeSeller(i) {
 function saveSettings() {
   var n = document.getElementById('setOfficeName').value.trim();
   var m = document.getElementById('setManager').value.trim();
-  app.officeName = n || 'Tea Tracker';
+  app.officeName = n || 'Tea_Tracker';
   app.manager    = m || 'Office Manager';
   save();
   document.getElementById('appTitle').textContent = app.officeName;
@@ -635,9 +633,9 @@ function generateBill() {
     var r = app.records[i];
     var recordDate = getDatePart(r.datetime);
     if (recordDate >= from && recordDate <= to) rptData.push(r);
-  }  rptData.sort(function(a,b){
-    var da = new Date(a.datetime), db = new Date(b.datetime);
-    return (isNaN(da) || isNaN(db)) ? 0 : da - db;
+  }
+  rptData.sort(function(a,b){
+    var da = new Date(a.datetime), db = new Date(b.datetime);    return (isNaN(da) || isNaN(db)) ? 0 : da - db;
   });
 
   if (rptData.length === 0) {
@@ -684,9 +682,9 @@ function generateBill() {
 function buildTextBill() {
   var sep = '------------------------------------';
   var t   = '';
-  t += 'TEA EXPENSE REPORT\n';  t += app.officeName + '\n';
-  t += sep + '\n';
-  t += 'Manager : ' + app.manager + '\n';
+  t += 'TEA EXPENSE REPORT\n';
+  t += app.officeName + '\n';
+  t += sep + '\n';  t += 'Manager : ' + app.manager + '\n';
   t += 'Period  : ' + rptRange    + '\n';
   t += sep + '\n';
   t += 'No  Date        Time   Seller      Cups  Cost\n';
@@ -733,9 +731,9 @@ function copyBill() {
   if (!rptData||rptData.length===0){toast('⚠️ View bill details first');return;}
   var text = buildTextBill();
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text)      .then(function(){ toast('✅ Copied to clipboard!'); })
-      .catch(function(){ showBillText(text); });
-  } else {
+    navigator.clipboard.writeText(text)
+      .then(function(){ toast('✅ Copied to clipboard!'); })
+      .catch(function(){ showBillText(text); });  } else {
     showBillText(text);
   }
 }
@@ -757,7 +755,7 @@ function copyFromModal() {
 }
 
 /* ════════════════════════════
-   DOWNLOAD PDF
+   DOWNLOAD PDF - FIXED fname ERROR
 ════════════════════════════ */
 function downloadPDF() {
   if (!rptData || rptData.length === 0) { 
@@ -782,9 +780,9 @@ function downloadPDF() {
   
   setTimeout(function() {
     try {
-      var doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });      
-      var pageW = 210;
-      var margin = 15;
+      var doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      
+      var pageW = 210;      var margin = 15;
       var y = 20;
       
       // Header background
@@ -825,16 +823,15 @@ function downloadPDF() {
       for (var i = 0; i < rptData.length; i++) {
         y += 7;
         
-        // Alternating row color
         if (i % 2 === 0) {
           doc.setFillColor(245, 245, 245);
           doc.rect(margin, y - 5, pageW - margin * 2, 6, 'F');
         }
         
-        doc.setTextColor(0, 0, 0);        var r = rptData[i];
+        doc.setTextColor(0, 0, 0);
+        var r = rptData[i];
         var d = new Date(r.datetime);
-        var dt = getDatePart(r.datetime);
-        var tm = isNaN(d) ? '--:--' : d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        var dt = getDatePart(r.datetime);        var tm = isNaN(d) ? '--:--' : d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
         
         doc.text('' + (i + 1), margin + 3, y);
         doc.text(dt, margin + 15, y);
@@ -843,7 +840,6 @@ function downloadPDF() {
         doc.text('' + r.cups, margin + 130, y);
         doc.text('Rs.' + parseFloat(r.cost).toFixed(2), pageW - margin - 10, y, { align: 'right' });
         
-        // New page if needed
         if (y > 270) {
           doc.addPage();
           y = 20;
@@ -877,12 +873,15 @@ function downloadPDF() {
       doc.setTextColor(150, 150, 150);
       doc.text('Generated by Tea Tracker | Piyuneel', pageW / 2, 285, { align: 'center' });
       
+      // ✅ FIXED: Create filename safely
+      var safeName = (app.officeName || 'Tea_Tracker').replace(/[^a-z0-9]/gi, '_');
+      var fname = safeName + '_TeaBill.pdf';
+      
       // Save
-      var fname = app.officeName.replace(/[^a-z0-9]/gi, '_') + '_TeaBill.pdf';
       doc.save(fname);
-            // Hide overlay & show success
-      document.getElementById('pdfOverlay').classList.remove('show');
-      toast('✅ PDF downloaded!');
+      
+      // Hide overlay & show success      document.getElementById('pdfOverlay').classList.remove('show');
+      toast('✅ PDF downloaded: ' + fname);
       
     } catch (e) {
       console.error('PDF Error:', e);
@@ -890,7 +889,6 @@ function downloadPDF() {
       document.getElementById('pdfStatus').textContent = 'Error: ' + e.message;
       toast('⚠️ PDF failed: ' + e.message);
       
-      // Fallback: show text version
       setTimeout(function() {
         showBillText(buildTextBill());
       }, 1500);
@@ -929,9 +927,9 @@ function askClearAll() {
   document.getElementById('confirmOverlay').classList.add('show');
 }
 
-/* ════════════════════════════   MODAL HELPERS
-════════════════════════════ */
-function closeModal(id) {
+/* ════════════════════════════
+   MODAL HELPERS
+════════════════════════════ */function closeModal(id) {
   document.getElementById(id).classList.remove('show');
 }
 
