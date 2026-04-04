@@ -7,6 +7,11 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Tea Tracker</title>
+<!-- Vercel Web Analytics -->
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
 <!-- jsPDF CDN for PDF generation -->
 <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
@@ -754,7 +759,7 @@ function copyFromModal() {
   }
 }
 
-/* ════════════════════════════
+/* ════════��═══════════════════
    DOWNLOAD PDF - FIXED fname ERROR
 ════════════════════════════ */
 function downloadPDF() {
