@@ -7,6 +7,11 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Tea Tracker</title>
+<!-- Vercel Web Analytics -->
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
 <!-- jsPDF CDN for PDF generation -->
 <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
@@ -145,7 +150,7 @@ hr.dhr{border:none;border-top:1px solid #fcc;margin:14px 0;}
 .modal-actions{display:flex;gap:10px;margin-top:16px;}
 .modal-actions .btn{flex:1;padding:11px;}
 
-/* ── TOAST ── */.toast{position:fixed;bottom:75px;left:50%;transform:translateX(-50%);background:#1e1e2e;color:#fff;padding:10px 22px;border-radius:50px;font-size:.85rem;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.3);z-index:2000;white-space:nowrap;pointer-events:none;transition:opacity .4s;}
+/* ── TOAST ���─ */.toast{position:fixed;bottom:75px;left:50%;transform:translateX(-50%);background:#1e1e2e;color:#fff;padding:10px 22px;border-radius:50px;font-size:.85rem;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.3);z-index:2000;white-space:nowrap;pointer-events:none;transition:opacity .4s;}
 
 /* ── LIST ── */
 .seller-list{list-style:none;margin-top:8px;}
@@ -754,7 +759,7 @@ function copyFromModal() {
   }
 }
 
-/* ════════════════════════════
+/* ════════��═══════════════════
    DOWNLOAD PDF - FIXED fname ERROR
 ════════════════════════════ */
 function downloadPDF() {
